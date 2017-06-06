@@ -15,7 +15,7 @@ setup(
     license='ASL 2.0',
     author='Inmanta',
     author_email='code@inmanta.com',
-    description='Jinja domain for jinja templates',
+    description='Inmanta domain for inmanta modules and config',
     long_description=long_desc,
     zip_safe=False,
     classifiers=[
