@@ -6,11 +6,11 @@ This contrib extension, sphinxcontrib.inmanta provides a Sphinx
 domain for describing inmanta config and inmanta modules.
 '''
 
-requires = ['Sphinx>=1.5']
+requires = ['Sphinx>=1.5', 'click']
 
 setup(
     name='inmanta-sphinx',
-    version='0.1',
+    version='0.3',
     url='https://github.com/inmanta/sphinxcontrib.jinjadomain',
     license='ASL 2.0',
     author='Inmanta',
@@ -34,4 +34,8 @@ setup(
     include_package_data=True,
     install_requires=requires,
     namespace_packages=['sphinxcontrib'],
+    entry_points='''
+        [console_scripts]
+        sphinx-inmanta-api=sphinxcontrib.inmanta.api:generate_api_doc
+    ''',
 )
