@@ -142,6 +142,12 @@ modulepath: %s
                     else:
                         print(type(type_obj))
 
+            if len(types["typedef"]) > 0:
+                lines.extend(self.emit_heading("Typedefs", "-"))
+                for obj in types["typedef"].values():
+                    lines.extend(self.emit_typedef(obj))
+                lines.append("")
+
             if len(types["entity"]) > 0:
                 lines.extend(self.emit_heading("Entities", "-"))
                 for obj in types["entity"].values():
@@ -315,6 +321,15 @@ modulepath: %s
         lines.extend(self.emit_attributes(entity, attributes))
         lines.append("")
 
+        return lines
+
+    def emit_typedef(self, typedef):
+        lines = []
+        lines.append(".. inmanta:typedef:: {0}".format(str(typedef)))
+        lines.append("")
+        lines.append("   * Base type ``{0}``".format(typedef.basetype.__str__()))
+        lines.append("   * Type constraint ``{0}``".format(typedef.expression.pretty_print()))
+        lines.append("")
         return lines
 
     def emit_intro(self, module, source_repo):

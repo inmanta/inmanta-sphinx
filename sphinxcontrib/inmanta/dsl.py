@@ -114,6 +114,13 @@ class Implementation(InmantaObject):
         return sig
 
 
+class TypeDef(InmantaObject):
+    def handle_signature(self, sig, signode):
+        signode += addnodes.desc_annotation("typedef", "typedef ")
+        signode += addnodes.desc_addname(sig, sig)
+        return sig
+
+
 class InmantaDomain(Domain):
     name = "inmanta"
     label = "inmanta"
@@ -124,6 +131,7 @@ class InmantaDomain(Domain):
         'attribute': ObjType(l_('attribute'), 'attr', 'obj'),
         'relation': ObjType(l_('relation'), 'attr', 'obj'),
         'implementation': ObjType(l_('implementation'), 'attr', 'obj'),
+        'typedef': ObjType(l_('typedef'), 'attr', 'obj')
     }
     directives = {
         'module': Entity,
@@ -131,12 +139,14 @@ class InmantaDomain(Domain):
         'attribute': Attribute,
         'relation': Relation,
         'implementation': Implementation,
+        'typedef': TypeDef,
     }
     roles = {
         'entity': InmantaXRefRole(),
         'attribute': InmantaXRefRole(),
         'relation': InmantaXRefRole(),
         'implementation': InmantaXRefRole(),
+        'typedef': InmantaXRefRole(),
     }
     initial_data = {
         'objects': {},  # fullname -> docname, objtype
