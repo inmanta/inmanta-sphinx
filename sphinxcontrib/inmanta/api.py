@@ -16,8 +16,7 @@
     Contact: code@inmanta.com
 """
 
-from _collections import OrderedDict
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import os
 import re
 import shutil
@@ -133,7 +132,7 @@ modulepath: %s
                         full_name = type_obj.get_full_name()
                         types["implementation"][full_name] = type_obj
 
-                    elif isinstance(type_obj, (ast.entity.Default, ast.type.ConstraintType)):
+                    elif isinstance(type_obj, ast.type.ConstraintType):
                         types["typedef"][type_name] = type_obj
 
                     elif isinstance(type(type_obj), PluginMeta):
