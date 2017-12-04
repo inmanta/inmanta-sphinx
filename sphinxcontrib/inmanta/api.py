@@ -77,6 +77,7 @@ def parse_docstring(docstring):
             match = ATTRIBUTE_LINE_REGEX.search(line)
             if match is None:
                 print("Unable to parse line: " + line, file=sys.stderr)
+                continue
 
             items = match.groups()
             attributes[items[0]] = items[2]
@@ -339,7 +340,7 @@ modulepath: %s
             lines.append("")
 
         lines.append(" * License: " + module._meta["license"])
-        lines.append(" * Version: " + module._meta["version"])
+        lines.append(" * Version: " + str(module._meta["version"]))
         if "author" in module._meta:
             lines.append(" * Author: " + module._meta["author"])
 
