@@ -243,7 +243,7 @@ modulepath: %s
         for attr in others:
             name = attr.get_name()
 
-            attr_line = "   .. inmanta:attribute:: {1} {2}.{0}".format(attr.get_name(), attr.get_type().__str__(),
+            attr_line = "   .. inmanta:attribute:: {1} {2}.{0}".format(attr.get_name(), attr.get_type().type_string(),
                                                                        entity.get_full_name())
             if attr.get_name() in defaults:
                 attr_line += "=" + str(defaults[attr.get_name()])
@@ -325,9 +325,9 @@ modulepath: %s
 
     def emit_typedef(self, typedef):
         lines = []
-        lines.append(".. inmanta:typedef:: {0}".format(str(typedef)))
+        lines.append(".. inmanta:typedef:: {0}".format(typedef.type_string()))
         lines.append("")
-        lines.append("   * Base type ``{0}``".format(typedef.basetype.__str__()))
+        lines.append("   * Base type ``{0}``".format(typedef.basetype.type_string()))
         lines.append("   * Type constraint ``{0}``".format(typedef.expression.pretty_print()))
         lines.append("")
         return lines
