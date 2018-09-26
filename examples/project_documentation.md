@@ -8,7 +8,7 @@
 pip install inmanta-sphinx
 ```
 
-1. setup a basic sphinx project in the main project folder
+2. setup a basic sphinx project in the main project folder
 
 ```bash
 #docs folder
@@ -20,13 +20,13 @@ sphinx-quickstart --sep
 mkdir source/modules
 ```
 
-1. Adapt the project to load the inmanta extensions, in the file `conf.py`, modify extensions to contain `'sphinxcontrib.inmanta.dsl'`:
+3. Adapt the project to load the inmanta extensions, in the file `conf.py`, modify extensions to contain `'sphinxcontrib.inmanta.dsl'`:
 
 ```python
 extensions = [ 'sphinxcontrib.inmanta.dsl']
 ```
 
-1. Adapt `index.rst` to include all generated modules documents into the TOC
+5. Adapt `index.rst` to include all generated modules documents into the TOC
 
 ```reStructuredText
 .. toctree::
@@ -36,7 +36,7 @@ extensions = [ 'sphinxcontrib.inmanta.dsl']
    modules/*
 ```
 
-1. put the following script in project root
+6. put the following script in project root
 
 ```bash
 #!/bin/bash
@@ -68,4 +68,4 @@ cd build/docs
 make html
 ```
 
-1. execute it and enjoy
+7. execute it and enjoy
