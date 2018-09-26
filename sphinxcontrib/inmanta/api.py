@@ -113,7 +113,7 @@ modulepath: %s
             project.load()
             _, root_ns = compiler.do_compile()
 
-            cmp_name = name + "::"
+            cmp_name = name 
             doc_ns = [ns for ns in root_ns.children(recursive=True) if ns.get_full_name()[:len(cmp_name)] == cmp_name]
 
             modules = {}
