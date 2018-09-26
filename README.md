@@ -26,3 +26,12 @@ sphinxcontrib.inmanta.dsl
 This exention adds objects and directives to add documentation for Inmanta dsl objects such as
 entities, relations, ...
 
+
+sphinxcontrib.inmanta.api
+=========================
+
+Generates sphinx files for inmanta modules
+
+```
+python -m sphinxcontrib.inmanta.api --module_repo $(pwd)/libs --module aws --source-repo https://github.com/inmanta/aws --file modules/aws.rst
+```
