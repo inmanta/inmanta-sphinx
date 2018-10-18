@@ -382,7 +382,7 @@ modulepath: %s
 @click.option("--module", help="The module to generate api docs for", required=True)
 @click.option("--extra-modules", "-m", help="Extra modules that should be loaded to render the docs", multiple=True)
 @click.option("--source-repo", help="The repo where the upstream source is located.")
-@click.option("--file", "-f", help="Save the generated result here.")
+@click.option("--file", "-f", help="Save the generated result here.", required=True)
 def generate_api_doc(module_repo, module, extra_modules, source_repo, file):
     """
         Generate API documentation for module
