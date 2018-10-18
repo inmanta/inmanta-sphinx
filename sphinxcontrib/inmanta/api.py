@@ -387,6 +387,7 @@ def generate_api_doc(module_repo, module, extra_modules, source_repo, file):
     """
         Generate API documentation for module
     """
+    module_repo=os.path.abspath(module_repo)
     doc = DocModule()
     content = doc.run(module_repo, module, extra_modules, source_repo)
 
