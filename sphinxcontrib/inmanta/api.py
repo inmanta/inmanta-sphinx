@@ -119,6 +119,7 @@ modulepath: %s
             doc_ns = [ns for ns in module_ns.children(recursive=True)]
             doc_ns.append(module_ns)
 
+
             modules = {}
             for ns in doc_ns:
                 modules[ns.get_full_name()] = ns.defines_types
@@ -361,7 +362,7 @@ modulepath: %s
         if os.path.exists(module_path) and module.Module.is_valid_module(module_path):
             mod = module.Module(None, module_path)
             return mod, mod.get_all_submodules()
-        return []
+        return None, None
 
     def run(self, module_repo, module, extra_modules, source_repo):
         module_path = os.path.join(module_repo, module)
@@ -370,7 +371,8 @@ modulepath: %s
         for name in extra_modules:
             module_path = os.path.join(module_repo, name)
             _, m = self._get_modules(module_path)
-            submodules.extend(m)
+            if m is not None:
+                submodules.extend(m)
 
         lines = self.emit_intro(mod, source_repo)
         lines.extend(self.doc_compile(module_repo, module, submodules))
