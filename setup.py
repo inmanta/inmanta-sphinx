@@ -37,5 +37,7 @@ setup(
     entry_points='''
         [console_scripts]
         sphinx-inmanta-api=sphinxcontrib.inmanta.api:generate_api_doc
+        [pygments.lexers]
+        inmanta = sphinxcontrib.inmanta.pygments_lexer:InmantaLexer
     ''',
 )
