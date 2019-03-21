@@ -39,7 +39,7 @@ oldstyle = in_class_name + whitespace + ident + whitespace + multi_like + whites
 class InmantaLexer(RegexLexer):
 
     name = 'Inmanta'
-    aliases = ['inamnta']
+    aliases = ['inmanta']
     filenames = ['*.cf']
 
     def process_id(self, match):
