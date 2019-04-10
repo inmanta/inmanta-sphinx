@@ -20,7 +20,7 @@ from sphinx import addnodes
 from sphinx.directives import ObjectDescription
 from sphinx.domains import Domain
 from sphinx.domains import ObjType
-from sphinx.locale import l_
+from sphinx.locale import _
 from sphinx.roles import XRefRole
 from sphinx.util.nodes import make_refnode
 
@@ -126,12 +126,12 @@ class InmantaDomain(Domain):
     label = "inmanta"
 
     object_types = {
-        'module': ObjType(l_('module'), 'mod', 'obj'),
-        'entity': ObjType(l_('entity'), 'func', 'obj'),
-        'attribute': ObjType(l_('attribute'), 'attr', 'obj'),
-        'relation': ObjType(l_('relation'), 'attr', 'obj'),
-        'implementation': ObjType(l_('implementation'), 'attr', 'obj'),
-        'typedef': ObjType(l_('typedef'), 'attr', 'obj')
+        'module': ObjType(_('module'), 'mod', 'obj'),
+        'entity': ObjType(_('entity'), 'func', 'obj'),
+        'attribute': ObjType(_('attribute'), 'attr', 'obj'),
+        'relation': ObjType(_('relation'), 'attr', 'obj'),
+        'implementation': ObjType(_('implementation'), 'attr', 'obj'),
+        'typedef': ObjType(_('typedef'), 'attr', 'obj')
     }
     directives = {
         'module': Entity,
