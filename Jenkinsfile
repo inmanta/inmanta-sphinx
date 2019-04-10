@@ -23,8 +23,7 @@ pipeline {
       steps{
         script{
          
-          sh 'python -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta/docs/reference/modules/std.rst
-'
+          sh 'python -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta/docs/reference/modules/std.rst'
         }
       }
     }
