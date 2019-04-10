@@ -25,8 +25,8 @@ pipeline {
     stage("test"){
       steps{
         script{
-         
-          sh 'python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta/docs/reference/modules/std.rst'
+          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta/docs/reference/modules/std.rst'
+          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -b html inmanta/docs build'
         }
       }
     }
