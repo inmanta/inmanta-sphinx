@@ -32,8 +32,11 @@ from sphinx.domains import ObjType
 from sphinx.roles import XRefRole
 from sphinx.util.nodes import make_refnode
 from sphinx.util.nodes import nested_parse_with_titles
+from sphinx.util import logging
 
 from inmanta.config import Config
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _indent(text, n=2):
@@ -49,9 +52,9 @@ def _make_anchor_target(group_name, option_name):
     return target
 
 
-def _format_group(app, group_name, opt_list):
+def _format_group(group_name, opt_list):
     group_name = group_name or 'DEFAULT'
-    app.info('[inmanta.config] %s' % (group_name))
+    LOGGER.info('[inmanta.config] %s', group_name)
 
     yield '.. inmanta.config:group:: %s' % group_name
     yield ''
@@ -137,7 +140,6 @@ class ConfigGroup(rst.Directive):
 
     def run(self):
         env = self.state.document.settings.env
-        app = env.app
 
         group_name = ' '.join(self.content)
 
@@ -145,7 +147,7 @@ class ConfigGroup(rst.Directive):
 
         # Store the current group for use later in option directives
         env.temp_data['inmanta.config:group'] = group_name
-        app.info('inmanta.config group %r' % group_name)
+        LOGGER.info('inmanta.config group %r', group_name)
 
         # Store the location where this group is being defined
         # for use when resolving cross-references later.
@@ -183,7 +185,7 @@ class ConfigOption(ObjectDescription):
     def handle_signature(self, sig, signode):
         """Transform an option description into RST nodes."""
         optname = sig
-        self.env.app.info('inmanta.config option %s' % optname)
+        LOGGER.info('inmanta.config option %s', optname)
         # Insert a node into the output showing the option name
         signode += addnodes.desc_name(optname, optname)
         signode['allnames'] = [optname]
@@ -215,7 +217,7 @@ class ConfigGroupXRefRole(XRefRole):
         return target, target
 
 
-def _format_option_help(app):
+def _format_option_help():
     """Generate a series of lines of restructuredtext.
 
     Format the option help as restructuredtext and return it as a list
@@ -226,7 +228,6 @@ def _format_option_help(app):
 
     for section, opt_list in sorted(opts.items(), key=lambda x: x[0]):
         lines = _format_group(
-            app=app,
             group_name=section,
             opt_list=opt_list
         )
@@ -244,16 +245,13 @@ class ShowOptionsDirective(rst.Directive):
     has_content = True
 
     def run(self):
-        env = self.state.document.settings.env
-        app = env.app
-
         namespaces = [c.strip() for c in self.content if c.strip()]
         for namespace in namespaces:
             importlib.import_module(namespace)
 
         result = ViewList()
         source_name = '<' + __name__ + '>'
-        for line in _format_option_help(app):
+        for line in _format_option_help():
             result.append(line, source_name)
 
         node = nodes.section()
