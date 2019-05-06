@@ -10,8 +10,8 @@ requires = ['Sphinx>=1.5', 'click']
 
 setup(
     name='inmanta-sphinx',
-    version='0.9.2',
-    url='https://github.com/inmanta/sphinxcontrib.jinjadomain',
+    version='0.9.3',
+    url='https://github.com/inmanta/inmanta-sphinx',
     license='ASL 2.0',
     author='Inmanta',
     author_email='code@inmanta.com',
