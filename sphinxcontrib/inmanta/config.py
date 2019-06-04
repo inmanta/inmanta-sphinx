@@ -68,7 +68,7 @@ def _format_group(group_name, opt_list):
             yield _indent(':Type: %s' % typ)
         default = opt.get_default_desc()
         if default:
-            default = '``' + str(default).strip() + '``'
+            default = str(default).strip()
             yield _indent(':Default: %s' % default)
 #         if getattr(opt.type, 'min', None) is not None:
 #             yield _indent(':Minimum Value: %s' % opt.type.min)
