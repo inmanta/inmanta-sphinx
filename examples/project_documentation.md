@@ -5,7 +5,7 @@
 1. install dependencies
 
 ```bash
-pip install inmanta-sphinx
+pip install inmanta-sphinx inmanta
 ```
 
 2. setup a basic sphinx project in the main project folder
@@ -64,7 +64,7 @@ do
 
 done
 
-cd build/docs
+cd docs
 make html
 ```
 
