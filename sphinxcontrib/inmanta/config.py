@@ -70,14 +70,6 @@ def _format_group(group_name, opt_list):
         if default:
             default = str(default).strip()
             yield _indent(':Default: %s' % default)
-#         if getattr(opt.type, 'min', None) is not None:
-#             yield _indent(':Minimum Value: %s' % opt.type.min)
-#         if getattr(opt.type, 'max', None) is not None:
-#             yield _indent(':Maximum Value: %s' % opt.type.max)
-#         if getattr(opt.type, 'choices', None):
-#             choices_text = ', '.join([_get_choice_text(choice)
-#                                       for choice in opt.type.choices])
-#             yield _indent(':Valid Values: %s' % choices_text)
 
         yield ''
 
@@ -90,24 +82,6 @@ def _format_group(group_name, opt_list):
         if help_text:
             yield _indent(help_text)
             yield ''
-
-#         if opt.deprecated_opts:
-#             for line in _list_table(
-#                     ['Group', 'Name'],
-#                     ((d.group or 'DEFAULT',
-#                       d.name or opt.dest or 'UNSET')
-#                      for d in opt.deprecated_opts),
-#                     title='Deprecated Variations'):
-#                 yield _indent(line)
-#         if opt.deprecated_for_removal:
-#             yield _indent('.. warning::')
-#             yield _indent('   This option is deprecated for removal.')
-#             yield _indent('   Its value may be silently ignored ')
-#             yield _indent('   in the future.')
-#             yield ''
-#             if opt.deprecated_reason:
-#                 yield _indent('   :Reason: ' + opt.deprecated_reason)
-#             yield ''
 
         yield ''
 
