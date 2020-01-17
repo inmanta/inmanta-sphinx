@@ -71,7 +71,7 @@ class InmantaLexer(RegexLexer):
             ("[\"]{3}([\\n]|.)*?[\"]{3}", Comment.Multiline),  # t_begin_mls
             ("\n+", Whitespace),  # t_ANY_newline
             ('!=|==|>=|<=|<|>', Token.Operator),  # t_CMP_OP
-            ('[:[\]()=,.{}]', Token.Operator),  # literals
+            ('[:[\]()=,.{}*]', Token.Operator),  # literals
             ("\#.*?\n", Comment.Single),  # t_COMMENT
             ("[-]?[0-9]*[.][0-9]+", Number.Float),  # t_FLOAT
             ("[a-zA-Z_][a-zA-Z_0-9-]*", process_id),  # t_ID
