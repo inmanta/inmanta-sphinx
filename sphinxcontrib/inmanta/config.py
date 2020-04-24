@@ -237,11 +237,13 @@ class ShowOptionsDirective(rst.Directive):
             for path in file_paths:
                 with open(path, "r") as f:
                     for line in f:
-                        namespaces.append(line.strip(" \n"))
+                        line = line.strip(" \n")
+                        if line:
+                            namespaces.append(line)
             return namespaces
         else:
             return []
-        
+
     def _load_namespaces_from_content(self):
         return [c.strip() for c in self.content if c.strip()]
 
