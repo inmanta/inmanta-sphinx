@@ -24,7 +24,7 @@ pipeline {
           // install latest inmanta and not from release
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -U -c inmanta/requirements.txt ./inmanta'
           // install sphinx and plugins
-          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -U -c inmanta/requirements.txt sphinx-argparse sphinx-autodoc-annotation sphinx-rtd-theme sphinxcontrib-serializinghtml sphinx-tabs'
+          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -U -c inmanta/requirements.txt sphinx-argparse sphinx-autodoc-annotation sphinx-rtd-theme sphinxcontrib-serializinghtml sphinx-tabs sphinx-click'
           // install inmanta sphinx
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -U -c requirements.txt .'
           sh 'rm -rf inmanta/docs/reference/modules; mkdir inmanta/docs/reference/modules'

@@ -20,6 +20,8 @@
 # http://docs.openstack.org/developer/oslo.config/sphinxext.html
 
 import importlib
+import glob
+import os.path
 
 from docutils import nodes
 from docutils.parsers import rst
@@ -214,12 +216,42 @@ class ShowOptionsDirective(rst.Directive):
     option_spec = {
         'split-namespaces': directives.flag,
         'config-file': directives.unchanged,
+        'namespace-files': directives.unchanged,
     }
 
     has_content = True
 
+    def _load_namespaces_from_file(self):
+        dir_current_source = os.path.dirname(self.state.document.current_source)
+        if "namespace-files" in self.options:
+            file_paths = []
+            for path in self.options["namespace-files"].split(","):
+                path = path.strip()
+                if os.path.isabs(path):
+                    abs_path = path
+                else:
+                    abs_path = os.path.join(dir_current_source, path)
+                file_paths += glob.glob(abs_path)
+
+            namespaces = []
+            for path in file_paths:
+                with open(path, "r") as f:
+                    for line in f:
+                        line = line.strip(" \n")
+                        if line:
+                            namespaces.append(line)
+            return namespaces
+        else:
+            return []
+
+    def _load_namespaces_from_content(self):
+        return [c.strip() for c in self.content if c.strip()]
+
+    def _get_namespaces(self):
+        return self._load_namespaces_from_content() + self._load_namespaces_from_file()
+
     def run(self):
-        namespaces = [c.strip() for c in self.content if c.strip()]
+        namespaces = self._get_namespaces()
         for namespace in namespaces:
             importlib.import_module(namespace)
 
