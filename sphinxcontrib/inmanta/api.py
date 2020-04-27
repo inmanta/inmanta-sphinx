@@ -376,6 +376,7 @@ modulepath: %s
 
         lines = self.emit_intro(mod, source_repo)
         lines.extend(self.doc_compile(module_repo, module, submodules))
+        lines = [line for line in lines if line is not None]
         return "\n".join(lines)
 
 
