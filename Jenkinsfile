@@ -6,7 +6,7 @@ pipeline {
 
   parameters
   {
-    string(name: 'CORE_BRANCH', defaultValue: 'master', description: 'branch in the inamnta repo')
+    string(name: 'CORE_BRANCH', defaultValue: 'master', description: 'branch in the inmanta repo')
   }
 
   environment {
