@@ -1,0 +1,148 @@
+pipeline {
+    agent {
+        // TODO: correct label?
+        label 'gpg'
+    }
+
+    parameters {
+        choice(
+            name: 'version_increment',
+            choices: ['none', 'patch', 'minor', 'major'],
+            description: 'Indicates what kind of version bump should be done'
+        )
+        // TODO: is this necessary, is this job ever triggered automatically?
+        booleanParam(name: 'run_job', defaultValue: false, description: 'Allow for dry-runs')
+        booleanParam(name: 'upload', defaultValue: false, description: 'Publish to PyPi')
+    }
+
+    options {
+        disableConcurrentBuilds()
+        checkoutToSubdirectory('inmanta-sphinx')
+    }
+
+    stages {
+
+        stage("Setup venv") {
+            when {
+                expression { "${run_job}" == "true" }
+            }
+            steps {
+                dir('inmanta-sphinx') {
+                    sh '''
+                        python3 -m venv ${WORKSPACE}/env
+                    '''
+                }
+            }
+        }
+
+        stage("Set release date") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${version_increment}" != "none" }
+                }
+            }
+            steps{
+                dir('inmanta-sphinx') {
+                    sh '''
+                        git checkout -b issue/version-bump
+
+                        release_date=$(date --utc +'%y-%m-%d')
+                        sed -i "1s/\\?/${release_date}/" changelog.md
+                        git commit -m "set release date: ${release_date}" changelog.md
+                    '''
+                }
+            }
+        }
+
+        stage("Build dist") {
+            when {
+                expression { "${run_job}" == "true" }
+            }
+            steps {
+                dir('inmanta-sphinx') {
+                    sh '''
+                        ${WORKSPACE}/env/bin/python3 -m pip install -U twine pip bumpversion
+                        ${WORKSPACE}/env/bin/python3 setup.py egg_info -Db "" sdist
+                    '''
+                }
+            }
+        }
+
+        stage("Publish to PyPi") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${upload}" == "true" }
+                }
+            }
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'inmantaci_on_pypi',
+                        passwordVariable: 'TWINE_PASSWORD',
+                        usernameVariable: 'TWINE_USERNAME'
+                    ),
+                    string(credentialsId: 'package_gpg_passphrase', variable: 'PGP_PASS')
+                ]) {
+                    dir('inmanta-sphinx') {
+                        sh '''
+                            ${WORKSPACE}/env/bin/python3 -m twine upload dist/*.tar.gz
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Version bump") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${version_increment}" != "none" }
+                }
+            }
+            steps{
+                dir('inmanta-sphinx') {
+                    sh '''
+                        git checkout issue/version-bump
+
+                        # bump and tag version
+                        ${WORKSPACE}/env/bin/python3 -m bumpversion "${version_increment}"
+                    '''
+                }
+            }
+        }
+
+        stage("Push commits and tag") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${version_increment}" != "none" }
+                }
+            }
+            steps{
+                withCredentials([
+                    string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')
+                ]) {
+                    dir('inmanta-sphinx') {
+                        sh '''
+                            git checkout issue/version-bump
+
+                            git push --set-upstream origin issue/version-bump
+                            git push --tags
+
+                            # TODO: open pull request
+                        '''
+                    }
+                }
+            }
+        }
+
+    } // stages
+
+    post {
+        success{
+            archiveArtifacts artifacts: 'inmanta-sphinx/dist/*.tar.gz', allowEmptyArchive: true
+        }
+    }
+}

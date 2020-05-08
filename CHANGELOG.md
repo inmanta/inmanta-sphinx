@@ -1,4 +1,4 @@
-# 1.3.0 (??)
+# 1.3.0 (?)
 
 ## Change
  -
@@ -12,5 +12,5 @@
 # 1.0.0
 
 ## Change
- - Options are no longer quoted by inmanta-sphinx but by inmanta config framework  
+ - Options are no longer quoted by inmanta-sphinx but by inmanta config framework
 
