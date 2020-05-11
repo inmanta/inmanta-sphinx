@@ -1,16 +1,17 @@
 pipeline {
-    agent {
-        // TODO: correct label?
-        label 'gpg'
-    }
+    agent any
 
     parameters {
         choice(
+            name: 'release_type',
+            choices: ['dev', 'stable'],
+            description: 'Indicate whether a dev or stable release should be built.'
+        )
+        choice(
             name: 'version_increment',
-            choices: ['none', 'patch', 'minor', 'major'],
+            choices: ['patch', 'minor', 'major'],
             description: 'Indicates what kind of version bump should be done'
         )
-        // TODO: is this necessary, is this job ever triggered automatically?
         booleanParam(name: 'run_job', defaultValue: false, description: 'Allow for dry-runs')
         booleanParam(name: 'upload', defaultValue: false, description: 'Publish to PyPi')
     }
@@ -35,22 +36,110 @@ pipeline {
             }
         }
 
-        stage("Set release date") {
-            when {
+        stage("Setup next branch for major or minor release") {
+            when{
                 allOf {
                     expression { "${run_job}" == "true" }
-                    expression { "${version_increment}" != "none" }
+                    expression { "${release_type}" == "stable" }
+                    anyOf {
+                        expression { "${version_increment}" == "major" }
+                        expression { "${version_increment}" == "minor" }
+                    }
                 }
             }
             steps{
                 dir('inmanta-sphinx') {
-                    sh '''
-                        git checkout -b issue/version-bump
+                    withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U pip bumpversion
 
-                        release_date=$(date --utc +'%y-%m-%d')
-                        sed -i "1s/\\?/${release_date}/" changelog.md
-                        git commit -m "set release date: ${release_date}" changelog.md
-                    '''
+                            git checkout -b issue/version-bump
+
+                            # bump version if major release
+                            if [ "${version_increment}" == "major" ]; then
+                                ${WORKSPACE}/env/bin/python3 -m bumpversion --commit ${version_increment} CHANGELOG.md
+                            fi
+
+                            # set release date
+                            release_date=$(date --utc +'%y-%m-%d')
+                            sed -i "1s/\\?/${release_date}/" changelog.md
+                            git commit -m "set release date: ${release_date}" changelog.md
+
+                            git push origin issue/version-bump
+
+                            # Merge into next
+                            git checkout next
+                            git pull
+                            git merge -X theirs issue/version-bump
+                            git push origin next
+
+                            # Create a pull request to bump the version on master
+                            git checkout issue/version-bump
+                            ${WORKSPACE}/env/bin/python3 -m bumpversion "${version_increment}"
+                            current_version=$(sed -n -E 's/current_version[[:space:]]*=[[:space:]]*([\\digit.]*)/\\1/p' .bumpversion.cfg)
+                            content_changelog=$(cat CHANGELOG.md)
+                            echo -e "# v ${current_version} (?) Changes in this release:\\n\\n${content_changelog}" > CHANGELOG.md
+                            git commit -a -m "Bump version: ${current_version}"
+                            git push origin issue/version-bump
+                            request_data="{\\"title\\": \\"Bump version: ${current_version}\\", \\"body\\": \\"\\", \\"head\\": \\"issue/version-bump\\", \\"base\\": \\"master\\"}"
+                            curl -XPOST -H "Content-Type: application/json" -H "Authorization: token ${GITHUB_TOKEN}" --data "${request_data}" https://api.github.com/repos/inmanta/inmanta-sphinx/pulls
+
+                            # Build python package from next branch
+                            git checkout next
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Setup next branch for patch release") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${release_type}" == "stable" }
+                    expression { "${version_increment}" == "patch" }
+                }
+            }
+            steps {
+                dir('inmanta-sphinx') {
+                    withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git checkout next
+
+                            # Cherry-picking the patch commits on the next branch and setting
+                            # the changelog correctly is done manually before this job runs.
+
+                            export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U pip bumpversion
+
+                            # Bump version
+                            ${WORKSPACE}/env/bin/bumpversion --commit ${version_increment}
+                            git push origin next
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Add tag") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${release_type}" == "stable" }
+                }
+            }
+            steps{
+                dir('inmanta-sphinx') {
+                    withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
+                            current_version=$(sed -n -E 's/current_version[[:space:]]*=[[:space:]]*([\\digit.]*)/\\1/p' .bumpversion.cfg)
+                            tag="v${current_version}"
+                            git tag -a -m "Release: ${current_version}" ${tag}
+                            git push origin ${tag}
+                        '''
+                    }
                 }
             }
         }
@@ -58,12 +147,20 @@ pipeline {
         stage("Build dist") {
             when {
                 expression { "${run_job}" == "true" }
+                anyOf {
+                    expression { "${release_type}" == "stable" }
+                    expression { "${release_type}" == "dev" }
+                }
             }
             steps {
                 dir('inmanta-sphinx') {
                     sh '''
                         ${WORKSPACE}/env/bin/python3 -m pip install -U twine pip bumpversion
-                        ${WORKSPACE}/env/bin/python3 setup.py egg_info -Db "" sdist
+                        if [ "${release_type}" == "stable" ]; then
+                            ${WORKSPACE}/env/bin/python3 setup.py egg_info -Db "" sdist
+                        else
+                            ${WORKSPACE}/env/bin/python3 setup.py sdist
+                        fi
                     '''
                 }
             }
@@ -74,6 +171,7 @@ pipeline {
                 allOf {
                     expression { "${run_job}" == "true" }
                     expression { "${upload}" == "true" }
+                    expression { "${release_type}" == "stable" }
                 }
             }
             steps {
@@ -88,50 +186,6 @@ pipeline {
                     dir('inmanta-sphinx') {
                         sh '''
                             ${WORKSPACE}/env/bin/python3 -m twine upload dist/*.tar.gz
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage("Version bump") {
-            when {
-                allOf {
-                    expression { "${run_job}" == "true" }
-                    expression { "${version_increment}" != "none" }
-                }
-            }
-            steps{
-                dir('inmanta-sphinx') {
-                    sh '''
-                        git checkout issue/version-bump
-
-                        # bump and tag version
-                        ${WORKSPACE}/env/bin/python3 -m bumpversion "${version_increment}"
-                    '''
-                }
-            }
-        }
-
-        stage("Push commits and tag") {
-            when {
-                allOf {
-                    expression { "${run_job}" == "true" }
-                    expression { "${version_increment}" != "none" }
-                }
-            }
-            steps{
-                withCredentials([
-                    string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')
-                ]) {
-                    dir('inmanta-sphinx') {
-                        sh '''
-                            git checkout issue/version-bump
-
-                            git push --set-upstream origin issue/version-bump
-                            git push --tags
-
-                            # TODO: open pull request
                         '''
                     }
                 }
