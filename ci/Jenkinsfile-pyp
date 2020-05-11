@@ -23,7 +23,7 @@ pipeline {
 
     stages {
 
-        stage("Setup venv") {
+        stage("Setup venv and GitHub token") {
             when {
                 expression { "${run_job}" == "true" }
             }
@@ -31,6 +31,9 @@ pipeline {
                 dir('inmanta-sphinx') {
                     sh '''
                         python3 -m venv ${WORKSPACE}/env
+
+                        echo 'echo \${GITHUB_TOKEN}' > ${WORKSPACE}/ASK_PASS
+                        chmod u+x ${WORKSPACE}/ASK_PASS
                     '''
                 }
             }
