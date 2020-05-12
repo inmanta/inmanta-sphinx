@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        label 'gpg'
+    }
 
     parameters {
         choice(
@@ -35,6 +37,7 @@ pipeline {
                 dir('inmanta-sphinx') {
                     sh '''
                         python3 -m venv ${WORKSPACE}/env
+                        ${WORKSPACE}/env/bin/python3 -m pip install -U pip
 
                         echo 'echo \${GITHUB_TOKEN}' > ${WORKSPACE}/ASK_PASS
                         chmod u+x ${WORKSPACE}/ASK_PASS
@@ -69,7 +72,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
-                            ${WORKSPACE}/env/bin/python3 -m pip install -U pip bumpversion
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U bumpversion
 
                             git checkout -b issue/version-bump
 
@@ -126,7 +129,7 @@ pipeline {
                             # the changelog correctly is done manually before this job runs.
 
                             export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
-                            ${WORKSPACE}/env/bin/python3 -m pip install -U pip bumpversion
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U bumpversion
 
                             # Bump version
                             ${WORKSPACE}/env/bin/bumpversion --commit ${version_increment}
@@ -170,7 +173,7 @@ pipeline {
             steps {
                 dir('inmanta-sphinx') {
                     sh '''
-                        ${WORKSPACE}/env/bin/python3 -m pip install -U twine pip bumpversion
+                        ${WORKSPACE}/env/bin/python3 -m pip install -U bumpversion
                         if [ "${release_type}" == "stable" ]; then
                             ${WORKSPACE}/env/bin/python3 setup.py egg_info -Db "" sdist
                         else
@@ -199,6 +202,8 @@ pipeline {
                 ]) {
                     dir('inmanta-sphinx') {
                         sh '''
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U twine
+                            echo "${PGP_PASS}" | gpg --pinentry-mode loopback -u code@inmanta.com --passphrase-fd 0 --detach-sign --batch --yes -a dist/*.tar.gz
                             ${WORKSPACE}/env/bin/python3 -m twine upload dist/*.tar.gz
                         '''
                     }
