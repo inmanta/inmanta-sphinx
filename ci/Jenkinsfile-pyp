@@ -79,7 +79,7 @@ pipeline {
 
                             # Create a pull request to bump the version on master
                             git checkout issue/version-bump
-                            ${WORKSPACE}/env/bin/python3 -m bumpversion "${version_increment}"
+                            ${WORKSPACE}/env/bin/python3 -m bumpversion minor
                             current_version=$(sed -n -E 's/current_version[[:space:]]*=[[:space:]]*([\\digit.]*)/\\1/p' .bumpversion.cfg)
                             content_changelog=$(cat CHANGELOG.md)
                             echo -e "# v ${current_version} (?) Changes in this release:\\n\\n${content_changelog}" > CHANGELOG.md
