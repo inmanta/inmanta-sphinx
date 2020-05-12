@@ -204,7 +204,7 @@ pipeline {
                         sh '''
                             ${WORKSPACE}/env/bin/python3 -m pip install -U twine
                             echo "${PGP_PASS}" | gpg --pinentry-mode loopback -u code@inmanta.com --passphrase-fd 0 --detach-sign --batch --yes -a dist/*.tar.gz
-                            ${WORKSPACE}/env/bin/python3 -m twine upload dist/*.tar.gz
+                            ${WORKSPACE}/env/bin/python3 -m twine upload dist/*.tar.{gz,asc}
                         '''
                     }
                 }
@@ -238,7 +238,8 @@ pipeline {
 
     post {
         success{
-            archiveArtifacts artifacts: 'inmanta-sphinx/dist/*.tar.gz', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'inmanta-sphinx/dist/*.tar.gz, inmanta-sphinx/dist/*.tar.asc',
+            allowEmptyArchive: true
         }
     }
 }
