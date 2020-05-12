@@ -66,8 +66,8 @@ pipeline {
 
                             # set release date
                             release_date=$(date --utc +'%y-%m-%d')
-                            sed -i "1s/\\?/${release_date}/" changelog.md
-                            git commit -m "set release date: ${release_date}" changelog.md
+                            sed -i "1s/\\?/${release_date}/" CHANGELOG.md
+                            git commit -m "set release date: ${release_date}" CHANGELOG.md
 
                             git push origin issue/version-bump
 
