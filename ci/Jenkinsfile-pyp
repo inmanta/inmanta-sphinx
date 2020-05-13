@@ -1,0 +1,245 @@
+pipeline {
+    agent {
+        label 'gpg'
+    }
+
+    parameters {
+        choice(
+            name: 'release_type',
+            choices: ['dev', 'stable'],
+            description: 'Indicate whether a dev or stable release should be built.'
+        )
+        choice(
+            name: 'version_increment',
+            choices: ['none', 'patch', 'minor', 'major'],
+            description: 'Indicates what kind of version bump should be done. Ignored for dev releases.'
+        )
+        booleanParam(
+            name: 'run_job',
+            defaultValue: false,
+            description: 'Allow Jenkins to trigger the job without actually doing anything'
+        )
+        booleanParam(name: 'upload', defaultValue: false, description: 'Publish to PyPi')
+    }
+
+    options {
+        disableConcurrentBuilds()
+        checkoutToSubdirectory('inmanta-sphinx')
+    }
+
+    stages {
+
+        stage("Setup branch, venv and GitHub token") {
+            when {
+                expression { "${run_job}" == "true" }
+            }
+            steps {
+                dir('inmanta-sphinx') {
+                    sh '''
+                        python3 -m venv ${WORKSPACE}/env
+                        ${WORKSPACE}/env/bin/python3 -m pip install -U pip
+
+                        echo 'echo \${GITHUB_TOKEN}' > ${WORKSPACE}/ASK_PASS
+                        chmod u+x ${WORKSPACE}/ASK_PASS
+
+                        if [ "${release_type}" == "dev" ]; then
+                            git checkout master
+                        elif [ "${release_type}" == "stable" ] &&
+                            ([ "${version_increment}" == "none" ] || [ "${version_increment}" == "patch" ])
+                        then
+                            git checkout next
+                        else
+                            git checkout master
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage("Setup next branch for major or minor release") {
+            when{
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${release_type}" == "stable" }
+                    anyOf {
+                        expression { "${version_increment}" == "major" }
+                        expression { "${version_increment}" == "minor" }
+                    }
+                }
+            }
+            steps{
+                dir('inmanta-sphinx') {
+                    withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U bumpversion
+
+                            git checkout -b issue/version-bump
+
+                            # bump version if major release
+                            if [ "${version_increment}" == "major" ]; then
+                                ${WORKSPACE}/env/bin/python3 -m bumpversion --commit ${version_increment} CHANGELOG.md
+                            fi
+
+                            # set release date
+                            release_date=$(date --utc +'%y-%m-%d')
+                            sed -i "1s/\\?/${release_date}/" CHANGELOG.md
+                            git commit -m "set release date: ${release_date}" CHANGELOG.md
+
+                            git push origin issue/version-bump
+
+                            # Merge into next
+                            git checkout next
+                            git pull
+                            git merge -X theirs issue/version-bump
+                            git push origin next
+
+                            # Create a pull request to bump the version on master
+                            git checkout issue/version-bump
+                            ${WORKSPACE}/env/bin/python3 -m bumpversion minor
+                            current_version=$(sed -n -E 's/current_version[[:space:]]*=[[:space:]]*([\\digit.]*)/\\1/p' .bumpversion.cfg)
+                            content_changelog=$(cat CHANGELOG.md)
+                            echo -e "# v ${current_version} (?) Changes in this release:\\n\\n${content_changelog}" > CHANGELOG.md
+                            git commit -a -m "Bump version: ${current_version}"
+                            git push origin issue/version-bump
+                            request_data="{\\"title\\": \\"Bump version: ${current_version}\\", \\"body\\": \\"\\", \\"head\\": \\"issue/version-bump\\", \\"base\\": \\"master\\"}"
+                            curl -XPOST -H "Content-Type: application/json" -H "Authorization: token ${GITHUB_TOKEN}" --data "${request_data}" https://api.github.com/repos/inmanta/inmanta-sphinx/pulls
+
+                            # Build python package from next branch
+                            git checkout next
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Setup next branch for patch release") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${release_type}" == "stable" }
+                    expression { "${version_increment}" == "patch" }
+                }
+            }
+            steps {
+                dir('inmanta-sphinx') {
+                    withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            # Cherry-picking the patch commits on the next branch and setting
+                            # the changelog correctly is done manually before this job runs.
+
+                            export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U bumpversion
+
+                            # Bump version
+                            ${WORKSPACE}/env/bin/bumpversion --commit ${version_increment}
+                            git push origin next
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Add tag") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${release_type}" == "stable" }
+                }
+            }
+            steps{
+                dir('inmanta-sphinx') {
+                    withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
+                            current_version=$(sed -n -E 's/current_version[[:space:]]*=[[:space:]]*([\\digit.]*)/\\1/p' .bumpversion.cfg)
+                            tag="v${current_version}"
+                            git tag -a -m "Release: ${current_version}" ${tag}
+                            git push origin ${tag}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Build dist") {
+            when {
+                expression { "${run_job}" == "true" }
+                anyOf {
+                    expression { "${release_type}" == "stable" }
+                    expression { "${release_type}" == "dev" }
+                }
+            }
+            steps {
+                dir('inmanta-sphinx') {
+                    sh '''
+                        ${WORKSPACE}/env/bin/python3 -m pip install -U bumpversion
+                        if [ "${release_type}" == "stable" ]; then
+                            ${WORKSPACE}/env/bin/python3 setup.py egg_info -Db "" sdist
+                        else
+                            ${WORKSPACE}/env/bin/python3 setup.py sdist
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage("Publish to PyPi") {
+            when {
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${upload}" == "true" }
+                }
+            }
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'inmantaci_on_pypi',
+                        passwordVariable: 'TWINE_PASSWORD',
+                        usernameVariable: 'TWINE_USERNAME'
+                    ),
+                    string(credentialsId: 'package_gpg_passphrase', variable: 'PGP_PASS')
+                ]) {
+                    dir('inmanta-sphinx') {
+                        sh '''
+                            ${WORKSPACE}/env/bin/python3 -m pip install -U twine
+                            echo "${PGP_PASS}" | gpg --pinentry-mode loopback -u code@inmanta.com --passphrase-fd 0 --detach-sign --batch --yes -a dist/*.tar.gz
+                            ${WORKSPACE}/env/bin/python3 -m twine upload dist/*.tar.gz{,.asc}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Sync latest branch with next"){
+            when{
+                allOf {
+                    expression { "${run_job}" == "true" }
+                    expression { "${release_type}" == "stable" }
+                }
+            }
+
+            steps{
+                dir('inmanta-sphinx') {
+                    withCredentials([string(credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            export GIT_ASKPASS="${WORKSPACE}/ASK_PASS"
+                            git checkout latest
+                            git pull
+                            git merge -X theirs next
+                            git push origin latest
+                        '''
+                    }
+                }
+            }
+        }
+
+    } // stages
+
+    post {
+        success{
+            archiveArtifacts artifacts: 'inmanta-sphinx/dist/*.tar.gz, inmanta-sphinx/dist/*.tar.gz.asc',
+            allowEmptyArchive: true
+        }
+    }
+}
