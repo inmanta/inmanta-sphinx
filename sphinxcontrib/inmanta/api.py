@@ -47,7 +47,7 @@ def format_multiplicity(rel):
         return low
 
     if high is None:
-        high = "\*"
+        high = "*"
 
     return str(low) + ":" + str(high)
 
@@ -111,9 +111,8 @@ modulepath: %s
             Project.set(project)
             project.verify()
             project.load()
-            _, root_ns = compiler.do_compile()
+            _, root_ns = compiler.get_types_and_scopes()
 
-            
             module_ns = root_ns.get_child(name)
 
             doc_ns = [ns for ns in module_ns.children(recursive=True)]
