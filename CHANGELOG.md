@@ -1,4 +1,4 @@
-# 1.3.0 (?)
+# 1.3.0 (20-06-30)
 
 ## Change
  - Don't perform a full compile on documentation generation (#31)
