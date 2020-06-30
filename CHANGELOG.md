@@ -1,3 +1,9 @@
+# 1.3.0 (20-06-30)
+
+## Change
+ - Don't perform a full compile on documentation generation (#31)
+ - Use * instead of \* to describe a relationship without upper bound.
+
 # 1.2.0 (04-27-2020)
 
 ## Change
@@ -7,5 +13,5 @@
 # 1.0.0
 
 ## Change
- - Options are no longer quoted by inmanta-sphinx but by inmanta config framework  
+ - Options are no longer quoted by inmanta-sphinx but by inmanta config framework
 
