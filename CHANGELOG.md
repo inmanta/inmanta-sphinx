@@ -1,3 +1,5 @@
+# v 1.4.0 (?) Changes in this release:
+
 # 1.3.0 (20-06-30)
 
 ## Change
@@ -14,4 +16,3 @@
 
 ## Change
  - Options are no longer quoted by inmanta-sphinx but by inmanta config framework
-
