@@ -1,7 +1,8 @@
 # 1.3.0 (?)
 
 ## Change
- -
+ - Don't perform a full compile on documentation generation (#31)
+ - Use * instead of \* to describe a relationship without upper bound.
 
 # 1.2.0 (04-27-2020)
 
