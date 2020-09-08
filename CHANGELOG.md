@@ -1,4 +1,5 @@
-# v 1.4.0 (?) Changes in this release:
+# v 1.4.0 (?)
+Changes in this release:
 
 # 1.3.0 (20-06-30)
 
