@@ -188,4 +188,4 @@ class InmantaDomain(Domain):
 
 def setup(app):
     app.add_domain(InmantaDomain)
-    app.add_lexer("inmanta", InmantaLexer())
+    app.add_lexer("inmanta", InmantaLexer)
