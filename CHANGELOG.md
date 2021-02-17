@@ -1,3 +1,7 @@
+# v 1.3.1 (21-02-17)
+Changes in this release:
+ - Correctly create an instance of the Project class.
+
 # 1.3.0 (20-06-30)
 
 ## Change

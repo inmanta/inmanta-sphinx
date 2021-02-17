@@ -92,7 +92,7 @@ def parse_docstring(docstring):
 
 class DocModule(object):
     def doc_compile(self, module_dir, name, import_list):
-        curdir = os.getcwd()
+        old_curdir = os.getcwd()
         main_cf = "\n".join(["import " + i for i in import_list])
         try:
             project_dir = tempfile.mkdtemp()
@@ -106,10 +106,8 @@ repo: %s
 modulepath: %s
     """ % (module_dir, module_dir))
 
-            project = Project(project_dir)
-            project.use_virtual_env()
-            Project.set(project)
-            project.verify()
+            os.chdir(project_dir)
+            project = Project.get()
             project.load()
             _, root_ns = compiler.get_types_and_scopes()
 
@@ -185,7 +183,7 @@ modulepath: %s
 
             return lines
         finally:
-            os.chdir(curdir)
+            os.chdir(old_curdir)
             shutil.rmtree(project_dir)
 
         return []
