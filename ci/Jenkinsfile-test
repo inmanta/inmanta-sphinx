@@ -19,8 +19,10 @@ pipeline {
   }
 
   stages {
-    stage("stage"){
+    stage("setup"){
       steps{
+        deleteDir()
+        checkout scm
         script{
           checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: params.CORE_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'inmanta-core']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/inmanta-core.git']]]
           checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
