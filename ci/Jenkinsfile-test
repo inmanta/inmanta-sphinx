@@ -30,7 +30,7 @@ pipeline {
           checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
 
           sh 'rm -rf $INMANTA_TEST_ENV; python3 -m venv $INMANTA_TEST_ENV; $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip'
-          // Ensure the inmant package is installed. This is required to extract the version number of the documentation
+          // Ensure the inmanta package is installed. This package is required to determine the version number of the documentation.
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install --pre inmanta'
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt'
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core'
