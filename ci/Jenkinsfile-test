@@ -31,15 +31,15 @@ pipeline {
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt'
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core'
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install .'
-          sh 'rm -rf inmanta/docs/reference/modules; mkdir inmanta/docs/reference/modules'
+          sh 'rm -rf inmanta-core/docs/reference/modules; mkdir inmanta-core/docs/reference/modules'
         }
       }
     }
     stage("test"){
       steps{
         script{
-          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta/docs/reference/modules/std.rst'
-          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta/docs build'
+          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst'
+          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build'
         }
       }
     }
