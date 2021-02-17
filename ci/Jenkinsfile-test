@@ -15,14 +15,16 @@ pipeline {
 
   environment {
     INMANTA_TEST_ENV="${env.WORKSPACE}/env"
-    PIP_INDEX_URL='https://artifacts.internal.inmanta.com/inmanta/dev'
+    PIP_INDEX_URL="https://artifacts.internal.inmanta.com/inmanta/dev"
   }
 
   stages {
     stage("setup"){
       steps{
         deleteDir()
-        checkout scm
+        dir("inmanta-sphinx") {
+          checkout scm
+        }
         script{
           checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: params.CORE_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'inmanta-core']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/inmanta-core.git']]]
           checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
@@ -32,7 +34,7 @@ pipeline {
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install --pre inmanta'
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt'
           sh '$INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core'
-          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install .'
+          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-sphinx'
           sh 'rm -rf inmanta-core/docs/reference/modules; mkdir inmanta-core/docs/reference/modules'
         }
       }
