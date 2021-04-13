@@ -357,7 +357,7 @@ modulepath: %s
         mod: module.Module
         try:
             mod = module.Module(None, module_path)
-        except module.InvalidMetadata:
+        except (module.InvalidModuleException, module.InvalidMetadata):
             return None, None
         else:
             return mod, mod.get_all_submodules()
