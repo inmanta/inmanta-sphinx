@@ -335,19 +335,17 @@ modulepath: %s
         return lines
 
     def emit_intro(self, module, source_repo):
-        lines = self.emit_heading("Module " + module._meta["name"], "=")
+        lines = self.emit_heading("Module " + module.name, "=")
 
-        if "description" in module._meta:
-            lines.append(module._meta["description"])
+        if module.metadata.description is not None:
+            lines.append(module.metadata.description)
             lines.append("")
 
-        lines.append(" * License: " + module._meta["license"])
-        lines.append(" * Version: " + str(module._meta["version"]))
-        if "author" in module._meta:
-            lines.append(" * Author: " + module._meta["author"])
+        lines.append(" * License: " + module.metadata.license)
+        lines.append(" * Version: " + str(module.metadata.version))
 
-        if "compiler_version" in module._meta:
-            lines.append(" * This module requires compiler version %s or higher" % module._meta["compiler_version"])
+        if module.metadata.compiler_version is not None:
+            lines.append(" * This module requires compiler version %s or higher" % module.metadata.compiler_version)
 
         if source_repo is not None:
             lines.append(" * Upstream project: " + source_repo)
@@ -356,10 +354,13 @@ modulepath: %s
         return lines
 
     def _get_modules(self, module_path):
-        if os.path.exists(module_path) and module.Module.is_valid_module(module_path):
+        mod: module.Module
+        try:
             mod = module.Module(None, module_path)
+        except module.InvalidMetadata:
+            return None, None
+        else:
             return mod, mod.get_all_submodules()
-        return None, None
 
     def run(self, module_repo, module, extra_modules, source_repo):
         module_path = os.path.join(module_repo, module)

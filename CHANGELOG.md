@@ -1,6 +1,7 @@
 # v 1.4.0 (?)
 Changes in this release:
  - Correctly create an instance of the Project class.
+ - Use stable inmanta-core api
 
 # 1.3.0 (20-06-30)
 
