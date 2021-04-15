@@ -1,6 +1,7 @@
-# v 1.3.1 (21-02-17)
+# v 1.4.0 (2021-04-15)
 Changes in this release:
  - Correctly create an instance of the Project class.
+ - Use stable inmanta-core api
 
 # 1.3.0 (20-06-30)
 
@@ -18,4 +19,3 @@ Changes in this release:
 
 ## Change
  - Options are no longer quoted by inmanta-sphinx but by inmanta config framework
-
