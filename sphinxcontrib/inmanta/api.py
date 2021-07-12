@@ -356,7 +356,10 @@ modulepath: %s
     def _get_modules(self, module_path):
         mod: module.Module
         try:
-            mod = module.Module(None, module_path)
+            if hasattr(module, "ModuleV1"):
+                mod = module.ModuleV1(None, module_path)
+            else:
+                mod = module.Module(None, module_path)
         except (module.InvalidModuleException, module.InvalidMetadata):
             return None, None
         else:
