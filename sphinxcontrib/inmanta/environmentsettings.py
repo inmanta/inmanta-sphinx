@@ -153,14 +153,18 @@ class EnvironmentSettingsDomain(Domain):
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         if typ == 'setting':
-            return make_refnode(
-                builder,
-                fromdocname,
-                env.domaindata['inmanta.environment-settings']['setting'][target],
-                target,
-                contnode,
-                target,
-            )
+            try:
+                return make_refnode(
+                    builder,
+                    fromdocname,
+                    env.domaindata['inmanta.environment-settings']['setting'][target],
+                    target,
+                    contnode,
+                    target,
+                )
+            except KeyError:
+                # this may get called with an invalid ref by markdown
+                pass
         return None
 
 

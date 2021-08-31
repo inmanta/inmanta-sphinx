@@ -288,25 +288,29 @@ class ConfigDomain(Domain):
     }
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
-        if typ == 'option':
-            _, option_name = target.split('.', 1)
-            return make_refnode(
-                builder,
-                fromdocname,
-                env.domaindata['inmanta.config']['options'][target],
-                target,
-                contnode,
-                option_name,
-            )
-        if typ == 'group':
-            return make_refnode(
-                builder,
-                fromdocname,
-                env.domaindata['inmanta.config']['groups'][target],
-                target,
-                contnode,
-                target,
-            )
+        try:
+            if typ == 'option':
+                _, option_name = target.split('.', 1)
+                return make_refnode(
+                    builder,
+                    fromdocname,
+                    env.domaindata['inmanta.config']['options'][target],
+                    target,
+                    contnode,
+                    option_name,
+                )
+            if typ == 'group':
+                return make_refnode(
+                    builder,
+                    fromdocname,
+                    env.domaindata['inmanta.config']['groups'][target],
+                    target,
+                    contnode,
+                    target,
+                )
+        except (KeyError, ValueError):
+            # this may get called with an invalid ref by markdown
+            return None
         return None
 
 
