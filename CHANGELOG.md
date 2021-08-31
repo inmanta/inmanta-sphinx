@@ -1,5 +1,7 @@
-# v 1.5.0 (?)
+# v 1.4.1 (?)
 Changes in this release:
+- Fix compatibility with recommonmark
+- Fix compatibility with inmanta modules V2
 
 # v 1.4.0 (2021-04-15)
 Changes in this release:
