@@ -2,6 +2,7 @@
 Changes in this release:
 - Fix compatibility with recommonmark
 - Fix compatibility with inmanta modules V2
+- Added explicit project install for compatibility with latest inmanta-core
 
 # v 1.4.0 (2021-04-15)
 Changes in this release:

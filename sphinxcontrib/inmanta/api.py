@@ -108,7 +108,12 @@ modulepath: %s
 
             os.chdir(project_dir)
             project = Project.get()
-            project.load()
+            try:
+                # This is required for Modules V2, which don't install on each compile
+                project.load(install=True)
+            except TypeError:
+                # install argument doesn't exist on older versions
+                project.load()
             _, root_ns = compiler.get_types_and_scopes()
 
             module_ns = root_ns.get_child(name)
