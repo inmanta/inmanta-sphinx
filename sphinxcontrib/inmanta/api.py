@@ -17,6 +17,7 @@
 """
 
 from collections import defaultdict, OrderedDict
+from typing import Optional
 import os
 import re
 import shutil
@@ -93,6 +94,7 @@ def parse_docstring(docstring):
 class DocModule(object):
     def doc_compile(self, module_dir, name, import_list):
         old_curdir = os.getcwd()
+        # TODO: project might need module v2 source?
         main_cf = "\n".join(["import " + i for i in import_list])
         try:
             project_dir = tempfile.mkdtemp()
@@ -179,6 +181,7 @@ modulepath: %s
             h = []
             for entity, handlers in handler.Commander.get_handlers().items():
                 for handler_name, cls in handlers.items():
+                    # TODO: does this need to change?
                     if cls.__module__.startswith("inmanta_plugins." + name):
                         h.extend(self.emit_handler(entity, handler_name, cls))
 
@@ -359,18 +362,20 @@ modulepath: %s
         return lines
 
     def _get_modules(self, module_path):
-        mod: module.Module
-        try:
-            if hasattr(module, "ModuleV1"):
-                mod = module.ModuleV1(None, module_path)
-            else:
-                mod = module.Module(None, module_path)
-        except (module.InvalidModuleException, module.InvalidMetadata):
-            return None, None
+        # TODO: where does module_path come from? Does it find v2?
+        mod: Optional[module.Module]
+        if hasattr(module.Module, "from_path"):
+            mod = module.Module.from_path(module_path)
         else:
-            return mod, mod.get_all_submodules()
+            # legacy mode
+            try:
+                mod = module.Module(None, module_path)
+            except (module.InvalidModuleException, module.InvalidMetadata):
+                mod = None
+        return (mod, mod.get_all_submodules()) if mod is not None else (None, None)
 
     def run(self, module_repo, module, extra_modules, source_repo):
+        # TODO: this module path is not correct for v2
         module_path = os.path.join(module_repo, module)
         mod, submodules = self._get_modules(module_path)
 
@@ -386,6 +391,7 @@ modulepath: %s
         return "\n".join(lines)
 
 
+# TODO: update options and required
 @click.command()
 @click.option("--module_repo", help="The repo where all modules are stored (local file)", required=True)
 @click.option("--module", help="The module to generate api docs for", required=True)
