@@ -102,7 +102,7 @@ pipeline {
               dir("std") {
                 deleteDir()
               }
-              sh "$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std"
+              sh "$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre"
 
               sh '''
                 $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst'
