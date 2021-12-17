@@ -30,7 +30,6 @@ pipeline {
         axes {
           axis {
             name "CORE_BRANCH"
-            // TODO: add note to major release docs to update this
             values "master", "iso4"
           }
           axis {
