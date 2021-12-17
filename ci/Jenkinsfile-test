@@ -51,7 +51,7 @@ pipeline {
           }
         }
         options {
-          lock("inmanta-sphinx-${BRANCH_NAME}-sequential-matrix")
+          lock("inmanta-sphinx-sequential-matrix/${BRANCH_NAME}")
         }
         stages {
           stage("check out inmanta-core") {
