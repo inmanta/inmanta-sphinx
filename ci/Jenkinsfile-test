@@ -11,6 +11,8 @@ pipeline {
   environment {
     INMANTA_TEST_ENV="${env.WORKSPACE}/env"
     PIP_INDEX_URL="https://artifacts.internal.inmanta.com/inmanta/dev"
+    // don't require product package (inmanta or inmanta-service-orchestrator)
+    INMANTA_DONT_DISCOVER_VERSION=1
   }
 
   stages {
