@@ -353,9 +353,9 @@ modulepath: %s
             lines.append("")
 
         lines.append(" * License: " + module.metadata.license)
-        lines.append(" * Version: " + str(module.metadata.version))
+        lines.append(" * Version: " + str(module.version))
 
-        if module.metadata.compiler_version is not None:
+        if hasattr(module.metadata, "compiler_version") and module.metadata.compiler_version is not None:
             lines.append(" * This module requires compiler version %s or higher" % module.metadata.compiler_version)
 
         if source_repo is not None:
