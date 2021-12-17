@@ -86,8 +86,8 @@ pipeline {
               checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
 
               sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst'
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build'
+                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst
+                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
               '''
             }
           }
