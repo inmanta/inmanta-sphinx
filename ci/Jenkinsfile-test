@@ -91,7 +91,7 @@ pipeline {
 
           stage("test module v2") {
             when {
-              environment name: "MODULES_V2", value: "false"
+              environment name: "MODULES_V2", value: "true"
             }
             steps {
               dir("std") {
