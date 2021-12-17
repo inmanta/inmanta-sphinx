@@ -105,8 +105,8 @@ pipeline {
               sh '$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre'
 
               sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst'
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build'
+                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst
+                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
               '''
             }
           }
