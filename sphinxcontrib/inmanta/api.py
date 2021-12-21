@@ -17,6 +17,7 @@
 """
 
 from collections import defaultdict, OrderedDict
+from typing import List, Optional, Sequence, Tuple
 import os
 import re
 import shutil
@@ -91,7 +92,13 @@ def parse_docstring(docstring):
 
 
 class DocModule(object):
-    def doc_compile(self, module_dir, name, import_list):
+    def doc_compile(self, module_dir: Optional[str], name: str, import_list: Sequence[str]):
+        """
+        :param module_dir: Absolute path to the directory where all v1 modules are stored. Must not be None if the module
+            is a v1 module.
+        :param name: The name of the module.
+        :param import_list: A list of all namespaces that should be imported in order to load the full AST for this module.
+        """
         old_curdir = os.getcwd()
         main_cf = "\n".join(["import " + i for i in import_list])
         try:
@@ -99,21 +106,20 @@ class DocModule(object):
             with open(os.path.join(project_dir, "main.cf"), "w+") as fd:
                 fd.write(main_cf)
 
+            module_path: str = module_dir if module_dir is not None else "[]"
             with open(os.path.join(project_dir, "project.yml"), "w+") as fd:
                 fd.write("""name: docgen
 description: Project to generate docs
 repo: %s
 modulepath: %s
-    """ % (module_dir, module_dir))
+    """ % (module_path, module_path))
 
             os.chdir(project_dir)
             project = Project.get()
-            try:
+            if hasattr(project, "install_modules"):
                 # This is required for Modules V2, which don't install on each compile
-                project.load(install=True)
-            except TypeError:
-                # install argument doesn't exist on older versions
-                project.load()
+                project.install_modules()
+            project.load()
             _, root_ns = compiler.get_types_and_scopes()
 
             module_ns = root_ns.get_child(name)
@@ -347,9 +353,9 @@ modulepath: %s
             lines.append("")
 
         lines.append(" * License: " + module.metadata.license)
-        lines.append(" * Version: " + str(module.metadata.version))
+        lines.append(" * Version: " + str(module.version))
 
-        if module.metadata.compiler_version is not None:
+        if hasattr(module.metadata, "compiler_version") and module.metadata.compiler_version is not None:
             lines.append(" * This module requires compiler version %s or higher" % module.metadata.compiler_version)
 
         if source_repo is not None:
@@ -358,47 +364,88 @@ modulepath: %s
         lines.append("")
         return lines
 
-    def _get_modules(self, module_path):
-        mod: module.Module
-        try:
-            if hasattr(module, "ModuleV1"):
-                mod = module.ModuleV1(None, module_path)
-            else:
-                mod = module.Module(None, module_path)
-        except (module.InvalidModuleException, module.InvalidMetadata):
-            return None, None
-        else:
-            return mod, mod.get_all_submodules()
+    def _get_modules(self, module_repo: Optional[str], module_name: str) -> Optional[Tuple[module.Module, List[str]]]:
+        """
+        Given a module name, returns the module object and a list of all submodule names.
 
-    def run(self, module_repo, module, extra_modules, source_repo):
-        module_path = os.path.join(module_repo, module)
-        mod, submodules = self._get_modules(module_path)
+        :param module_repo: Absolute path to the directory where all v1 modules are stored. Must not be None if module is a v1
+            module.
+        :param module: The name of the module to fetch.
+        """
+
+        def get_module() -> Optional[module.Module]:
+            """
+            Returns the module object.
+            """
+            if hasattr(module, "ModuleV2"):
+                local_v2_source: module.ModuleV2Source = module.ModuleV2Source(urls=[])
+                v2_mod: Optional[module.ModuleV2] = local_v2_source.get_installed_module(project=None, module_name=module_name)
+                if v2_mod is not None:
+                    return v2_mod
+                elif module_repo is None:
+                    raise ValueError(
+                        f"{module_name} was not found as a v2 module. Either install it as a v2 module or pass the directory"
+                        " where v1 modules are located."
+                    )
+                else:
+                    return module.Module.from_path(os.path.join(module_repo, module_name))
+            else:
+                # legacy mode
+                if module_repo is None:
+                    raise ValueError(f"Please pass the directory where all modules modules are located.")
+                try:
+                    return module.Module(None, os.path.join(module_repo, module_name))
+                except (module.InvalidModuleException, module.InvalidMetadata):
+                    return None
+
+        mod: Optional[module.Module] = get_module()
+        return (mod, mod.get_all_submodules()) if mod is not None else None
+
+    def run(self, module_repo: Optional[str], module_name: str, extra_modules: Sequence[str], source_repo: str):
+        """
+        Run the module doc generation.
+
+        :param module_repo: Absolute path to the directory where all v1 modules are stored. May be None if the main and all
+            extra modules are v2 modules.
+        :param module_name: The name of the module to generate docs for.
+        :param extra_modules: The names of any extra modules.
+        """
+        mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(module_repo, module_name)
+        if mod_data is None:
+            raise Exception(f"Could not find module {module_name}.")
+        mod, submodules = mod_data
 
         for name in extra_modules:
-            module_path = os.path.join(module_repo, name)
-            _, m = self._get_modules(module_path)
-            if m is not None:
-                submodules.extend(m)
+            extra_mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(module_repo, name)
+            if extra_mod_data is not None:
+                submodules.extend(extra_mod_data[1])
 
         lines = self.emit_intro(mod, source_repo)
-        lines.extend(self.doc_compile(module_repo, module, submodules))
+        lines.extend(self.doc_compile(module_repo, module_name, submodules))
         lines = [line for line in lines if line is not None]
         return "\n".join(lines)
 
 
 @click.command()
-@click.option("--module_repo", help="The repo where all modules are stored (local file)", required=True)
+@click.option(
+    "--module_repo",
+    help=(
+        "The repo where all v1 modules are stored (local file). Ignored for v2 modules, which are always fetched from the"
+        " Python environment."
+    ),
+)
 @click.option("--module", help="The module to generate api docs for", required=True)
 @click.option("--extra-modules", "-m", help="Extra modules that should be loaded to render the docs", multiple=True)
 @click.option("--source-repo", help="The repo where the upstream source is located.")
 @click.option("--file", "-f", help="Save the generated result here.", required=True)
-def generate_api_doc(module_repo, module, extra_modules, source_repo, file):
+def generate_api_doc(module_repo: Optional[str], module: str, extra_modules: Sequence[str], source_repo: str, file: str):
     """
         Generate API documentation for module
     """
-    module_repo=os.path.abspath(module_repo)
     doc = DocModule()
-    content = doc.run(module_repo, module, extra_modules, source_repo)
+    content = doc.run(
+        os.path.abspath(module_repo) if module_repo is not None else None, module, extra_modules, source_repo
+    )
 
     with open(file, "w+") as fd:
         fd.write(content)

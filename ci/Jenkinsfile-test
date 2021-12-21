@@ -4,11 +4,6 @@ pipeline {
     disableConcurrentBuilds()
   }
 
-  parameters
-  {
-    string(name: 'CORE_BRANCH', defaultValue: 'master', description: 'branch in the inmanta repo')
-  }
-
   triggers {
     cron(BRANCH_NAME == "master" ? "H H(2-5) * * *": "")
   }
@@ -16,34 +11,104 @@ pipeline {
   environment {
     INMANTA_TEST_ENV="${env.WORKSPACE}/env"
     PIP_INDEX_URL="https://artifacts.internal.inmanta.com/inmanta/dev"
+    // don't require product package (inmanta or inmanta-service-orchestrator)
+    INMANTA_DONT_DISCOVER_VERSION=1
   }
 
   stages {
-    stage("setup"){
-      steps{
+    stage("Checkout source") {
+      steps {
         deleteDir()
         dir("inmanta-sphinx") {
           checkout scm
         }
-        script{
-          checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: params.CORE_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'inmanta-core']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/inmanta-core.git']]]
-          checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
-
-          sh 'rm -rf $INMANTA_TEST_ENV; python3 -m venv $INMANTA_TEST_ENV; $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip'
-          // Ensure the inmanta package is installed. This package is required to determine the version number of the documentation.
-          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install --pre inmanta'
-          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt'
-          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core'
-          sh '$INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-sphinx'
-          sh 'rm -rf inmanta-core/docs/reference/modules; mkdir inmanta-core/docs/reference/modules'
-        }
       }
     }
-    stage("test"){
-      steps{
-        script{
-          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst'
-          sh '$INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build'
+
+    stage("Matrix") {
+      matrix {
+        axes {
+          axis {
+            name "CORE_BRANCH"
+            values "master", "iso4"
+          }
+          axis {
+            name "MODULES_V2"
+            values "true", "false"
+          }
+        }
+        excludes {
+          exclude {
+            axis {
+              name "CORE_BRANCH"
+              values "iso4"
+            }
+            axis {
+              name "MODULES_V2"
+              values "true"
+            }
+          }
+        }
+        options {
+          lock("inmanta-sphinx-sequential-matrix/${BRANCH_NAME}")
+        }
+        stages {
+          stage("check out inmanta-core") {
+            steps {
+              dir("inmanta-core") {
+                deleteDir()
+              }
+              checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: env.CORE_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'inmanta-core']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/inmanta-core.git']]]
+            }
+          }
+
+          stage("set up environment") {
+            steps {
+              sh '''
+                rm -rf $INMANTA_TEST_ENV
+                python3 -m venv $INMANTA_TEST_ENV
+                $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip
+                $INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt
+                $INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core ./inmanta-sphinx
+                rm -rf inmanta-core/docs/reference/modules
+                mkdir inmanta-core/docs/reference/modules
+              '''
+            }
+          }
+
+          stage("test module v1") {
+            when {
+              environment name: "MODULES_V2", value: "false"
+            }
+            steps {
+              dir("std") {
+                deleteDir()
+              }
+              checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
+
+              sh '''
+                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst
+                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
+              '''
+            }
+          }
+
+          stage("test module v2") {
+            when {
+              environment name: "MODULES_V2", value: "true"
+            }
+            steps {
+              dir("std") {
+                deleteDir()
+              }
+              sh '$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre'
+
+              sh '''
+                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module std --source-repo https://github.com/inmanta/ --file inmanta-core/docs/reference/modules/std.rst
+                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
+              '''
+            }
+          }
         }
       }
     }
