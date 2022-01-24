@@ -1,3 +1,6 @@
+# v 1.6.0 (?)
+Changes in this release:
+
 # v 1.5.0 (2022-01-24)
 Changes in this release:
 - Fix compatibility with recommonmark
