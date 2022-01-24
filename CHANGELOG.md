@@ -1,9 +1,8 @@
-# v 1.4.4 (2021-09-16)
-- Added explicit project install for compatibility with latest inmanta-core
-
-# v 1.4.3 (2021-09-01)
+# v 1.5.0 (2022-01-24)
+Changes in this release:
 - Fix compatibility with recommonmark
 - Fix compatibility with inmanta modules V2
+- Added explicit project install for compatibility with latest inmanta-core
 
 # v 1.4.0 (2021-04-15)
 Changes in this release:
