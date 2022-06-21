@@ -1,6 +1,7 @@
 # v 1.6.0 (?)
 Changes in this release:
 - Fix issue with "+" assignation and "?" in lexer
+
 # v 1.5.0 (2022-01-24)
 Changes in this release:
 - Fix compatibility with recommonmark
