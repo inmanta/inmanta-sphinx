@@ -1,3 +1,6 @@
+# v 1.7.0 (?)
+Changes in this release:
+
 # v 1.6.0 (2022-09-09)
 Changes in this release:
 - Fix issue with "+" assignation and "?" in lexer
