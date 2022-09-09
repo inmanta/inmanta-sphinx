@@ -1,4 +1,4 @@
-# v 1.6.0 (?)
+# v 1.6.0 (2022-09-09)
 Changes in this release:
 - Fix issue with "+" assignation and "?" in lexer
 - Ensure that environment settings with an empty string as a default value are represented as ''
