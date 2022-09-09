@@ -106,7 +106,8 @@ def _format_setting_help():
         else:
             yield _indent(f":Type: {setting.typ}: {', '.join(setting.allowed_values)}")
 
-        yield _indent(':Default: %s' % setting.default)
+        default_value = "''" if isinstance(setting.default, str) and not setting.default else setting.default
+        yield _indent(f':Default: {default_value}')
         yield ""
         yield _indent(setting.doc)
 
