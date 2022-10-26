@@ -20,6 +20,7 @@
 # http://docs.openstack.org/developer/oslo.config/sphinxext.html
 
 import importlib
+from typing import List
 
 from docutils import nodes
 from docutils.parsers import rst
@@ -34,6 +35,8 @@ from sphinx.util.nodes import make_refnode
 from sphinx.util.nodes import nested_parse_with_titles
 from sphinx.util import logging
 
+from inmanta.server.bootloader import InmantaBootloader
+from inmanta.server.extensions import ApplicationContext
 from inmanta import data
 
 LOGGER = logging.getLogger(__name__)
@@ -98,7 +101,16 @@ def _format_setting_help():
     Format the option help as restructuredtext and return it as a list
     of lines.
     """
-    for setting in sorted(data.Environment._settings.values(), key=lambda x: x.name):
+    settings: List[data.Setting]
+    try:
+        bootloader = InmantaBootloader()
+        ctx: ApplicationContext = bootloader.load_slices(load_all_extensions=True, only_register_environment_settings=True)
+        settings = ctx.get_environment_settings()
+    except (TypeError, AttributeError):
+        # Fallback for older version of inmanta-core that don't have support to collect environment settings via the bootloader.
+        settings = sorted(data.Environment._settings.values(), key=lambda x: x.name)
+
+    for setting in settings:
         yield f".. inmanta.environment-settings:setting:: {setting.name}"
         yield ""
         if setting.typ != "enum":
