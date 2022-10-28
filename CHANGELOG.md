@@ -1,3 +1,7 @@
+# v 1.6.1 (2022-11-07)
+Changes in this release:
+- Ensure that environment settings defined by Inmanta extensions are present in the generated documentation.
+
 # v 1.6.0 (2022-09-09)
 Changes in this release:
 - Fix issue with "+" assignation and "?" in lexer
