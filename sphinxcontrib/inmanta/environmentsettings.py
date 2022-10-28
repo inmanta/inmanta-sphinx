@@ -102,11 +102,11 @@ def _format_setting_help():
     of lines.
     """
     settings: List[data.Setting]
-    try:
+    if hasattr(ApplicationContext, "get_environment_settings"):
         bootloader = InmantaBootloader()
         ctx: ApplicationContext = bootloader.load_slices(load_all_extensions=True, only_register_environment_settings=True)
         settings = ctx.get_environment_settings()
-    except (TypeError, AttributeError):
+    else:
         # Fallback for older version of inmanta-core that don't have support to collect environment settings via the bootloader.
         settings = sorted(data.Environment._settings.values(), key=lambda x: x.name)
 
