@@ -276,7 +276,7 @@ modulepath: %s
 
             lines.append("")
             if attr.end is not None:
-                otherend = attr.end.get_entity().get_full_name() + "." + attr.end.get_name()
+                otherend = attr.end.get_full_name() + "." + attr.end.get_name()
                 lines.append("      other end: :inmanta:relation:`{0} [{1}]<{0}>`".format(otherend,
                                                                                           format_multiplicity(attr.end)))
                 lines.append("")
