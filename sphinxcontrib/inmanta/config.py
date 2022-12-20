@@ -253,7 +253,12 @@ class ShowOptionsDirective(rst.Directive):
     def run(self):
         namespaces = self._get_namespaces()
         for namespace in namespaces:
-            importlib.import_module(namespace)
+            try:
+                importlib.import_module(namespace)
+            except ModuleNotFoundError:
+                # The documentation lists all possible Python modules in the server codebase with config. Only the ones that exist will be
+                # rendered. This allows a single file for both OSS and ISO releases.
+                LOGGER.warning("Unable to load module %s, no config will be loaded for this module", namespace)
 
         result = ViewList()
         source_name = '<' + __name__ + '>'
