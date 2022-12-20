@@ -256,7 +256,7 @@ class ShowOptionsDirective(rst.Directive):
             try:
                 importlib.import_module(namespace)
             except ModuleNotFoundError:
-                # The documentation lists all possible modules with config. Only the ones that exist will be
+                # The documentation lists all possible Python modules in the server codebase with config. Only the ones that exist will be
                 # rendered. This allows a single file for both OSS and ISO releases.
                 LOGGER.warning("Unable to load module %s, no config will be loaded for this module", namespace)
 
