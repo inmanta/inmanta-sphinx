@@ -1,4 +1,4 @@
-# v 1.7.0 (?)
+# v 1.7.0 (2022-12-20)
 Changes in this release:
 - Ensure that environment settings defined by Inmanta extensions are present in the generated documentation.
 - Try to load all modules provided in config options list. Do not fail is one is missing.
