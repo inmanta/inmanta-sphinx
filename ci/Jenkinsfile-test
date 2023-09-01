@@ -88,7 +88,7 @@ pipeline {
                 echo "Tests will be run with ${PYTHON_BINARY}"
                 rm -rf $INMANTA_TEST_ENV
                 ${PYTHON_BINARY} -m venv $INMANTA_TEST_ENV
-                $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip
+                $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip setuptools
                 $INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt
                 $INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core ./inmanta-sphinx
                 rm -rf inmanta-core/docs/reference/modules
