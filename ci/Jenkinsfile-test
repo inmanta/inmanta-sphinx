@@ -57,17 +57,38 @@ pipeline {
             steps {
               dir("inmanta-core") {
                 deleteDir()
+                script { // A full checkout is required for the get-python-version-for-checkout command
+                  git(
+                    branch: env.CORE_BRANCH,
+                    url: "https://github.com/inmanta/inmanta-core.git",
+                    credentialsId: 'inmantaci-token-on-github',
+                  )
+                  withCredentials([gitUsernamePassword(credentialsId: 'inmantaci-token-on-github')]) {
+                    sh 'git fetch'
+                  }
+                }
               }
-              checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: env.CORE_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'inmanta-core']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/inmanta-core.git']]]
             }
           }
 
           stage("set up environment") {
             steps {
+              withCredentials([
+                string(
+                  credentialsId: 'fff7ef7e-cb20-4fb2-a93b-c5139463c6bf',
+                  variable: 'GITHUB_TOKEN',
+                )
+              ]) {
+                sh '''
+                  curl -o ${WORKSPACE}/branch-to-python-version.json "https://${GITHUB_TOKEN}@raw.githubusercontent.com/inmanta/irt/master/branch-to-python-version.json"
+                '''
+              }
               sh '''
+                export PYTHON_BINARY=$(irt -v DEBUG get-python-version-for-checkout --map-file ${WORKSPACE}/branch-to-python-version.json --path ${WORKSPACE}/inmanta-core)
+                echo "Tests will be run with ${PYTHON_BINARY}"
                 rm -rf $INMANTA_TEST_ENV
-                python3 -m venv $INMANTA_TEST_ENV
-                $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip
+                ${PYTHON_BINARY} -m venv $INMANTA_TEST_ENV
+                $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip setuptools
                 $INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt
                 $INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core ./inmanta-sphinx
                 rm -rf inmanta-core/docs/reference/modules
