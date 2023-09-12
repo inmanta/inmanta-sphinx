@@ -1,5 +1,6 @@
 # v 1.8.0 (?)
 Changes in this release:
+- Fix lexer bug not recognizing simple quotes as a valid string delimiter.
 
 # v 1.7.0 (2022-12-20)
 Changes in this release:
