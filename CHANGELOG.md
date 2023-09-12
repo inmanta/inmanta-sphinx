@@ -1,3 +1,7 @@
+# v 1.8.0 (2023-09-12)
+Changes in this release:
+- Fix lexer bug not recognizing simple quotes as a valid string delimiter.
+
 # v 1.7.0 (2022-12-20)
 Changes in this release:
 - Ensure that environment settings defined by Inmanta extensions are present in the generated documentation.

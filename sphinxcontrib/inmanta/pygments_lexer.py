@@ -80,8 +80,8 @@ class InmantaLexer(RegexLexer):
             ("/[^/]*/", String.Regex),  # t_REGEX
             ("--|->|<-", Token.Operator),  # t_REL
             ("[:]{2}", Name),  # t_SEP
-            (r'\".*?[^\\]\"', String),  # t_STRING
-            ("\"\"", String),  # t_STRING_EMPTY
+            (r'\".*?[^\\]\"|\'.*?[^\\]\'', String),  # t_STRING
+            ("\"\"|\'\'", String),  # t_STRING_EMPTY
             ("[ \t]+", Whitespace)  # t_ignore
 
         ],
