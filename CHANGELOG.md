@@ -1,5 +1,6 @@
 # v 1.9.0 (?)
 Changes in this release:
+- Drop iso4/iso5 support
 
 # v 1.8.0 (2023-09-12)
 Changes in this release:
