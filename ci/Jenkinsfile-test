@@ -37,18 +37,6 @@ pipeline {
             values "true", "false"
           }
         }
-        excludes {
-          exclude {
-            axis {
-              name "CORE_BRANCH"
-              values "iso4"
-            }
-            axis {
-              name "MODULES_V2"
-              values "true"
-            }
-          }
-        }
         options {
           lock("inmanta-sphinx-sequential-matrix/${BRANCH_NAME}")
         }
