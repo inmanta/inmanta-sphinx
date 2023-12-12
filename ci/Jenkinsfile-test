@@ -30,7 +30,7 @@ pipeline {
         axes {
           axis {
             name "CORE_BRANCH"
-            values "master", "iso6"
+            values "master", "iso6", "iso7"
           }
           axis {
             name "MODULES_V2"
