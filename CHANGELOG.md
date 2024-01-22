@@ -1,6 +1,7 @@
 # v 1.9.0 (?)
 Changes in this release:
 - Drop iso4/iso5 support
+- Support the new arithmetic operators in the lexer
 
 # v 1.8.0 (2023-09-12)
 Changes in this release:
