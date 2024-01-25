@@ -1,4 +1,4 @@
-# v 1.9.0 (?)
+# v 1.9.0 (2024-01-25)
 Changes in this release:
 - Drop iso4/iso5 support
 - Support the new arithmetic operators in the lexer
