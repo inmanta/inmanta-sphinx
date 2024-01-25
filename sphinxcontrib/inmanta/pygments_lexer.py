@@ -55,7 +55,6 @@ class InmantaLexer(RegexLexer):
     tokens = {
         'root': [
             (r"(matching)([ \t]+)(/(?:[^/\\\n]|\\.)+/)", bygroups(Keyword, Whitespace, String.Regex)),
-            (r"matching", Keyword),
             (r'(entity)([ \t]+)([a-zA-Z_][a-zA-Z_0-9-]*)', bygroups(Keyword, Whitespace, Name.Class), 'entity-extend'),
             # old style relation Host mgr [0:] -- [1] odl::ODL odl
             (in_class_name + whitespace + ident + whitespace + multi_like + whitespace + in_class_name + whitespace + ident,
