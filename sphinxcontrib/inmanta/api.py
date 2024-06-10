@@ -440,7 +440,7 @@ pip:
             raise Exception(f"Could not find module {module_name}.")
         mod, submodules = mod_data
 
-        module_filter = self.get_module_filter(None if not module_name else os.path.join(module_repo, module_name))
+        module_filter = self.get_module_filter(None if not module_repo else os.path.join(module_repo, module_name))
 
         for name in extra_modules:
             extra_mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(module_repo, name)
