@@ -448,7 +448,7 @@ pip:
                 submodules.extend(extra_mod_data[1])
 
         submodules = sorted([sm for sm in set(submodules) if module_filter(sm)])
-        print("Selected modules: " + ", ".join(submodules))
+        print("Selected sub-modules: " + ", ".join(submodules))
 
         lines = self.emit_intro(mod, source_repo)
         lines.extend(self.doc_compile(module_repo, mod.name, submodules))
