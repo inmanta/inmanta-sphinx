@@ -451,7 +451,7 @@ pip:
             raise Exception(f"Could not find module {module_name}.")
         mod, submodules = mod_data
 
-        module_filter = self.get_module_filter(None if not module_name else os.path.join(module_repo, module_name))
+        module_filter = self.get_module_filter(None if not module_repo else os.path.join(module_repo, module_name))
 
         for name in extra_modules:
             extra_mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(module_repo, name)
@@ -459,7 +459,7 @@ pip:
                 submodules.extend(extra_mod_data[1])
 
         submodules = sorted([sm for sm in set(submodules) if module_filter(sm)])
-        print("Selected modules: " + ", ".join(submodules))
+        print("Selected sub-modules: " + ", ".join(submodules))
 
         lines = self.emit_intro(mod, source_repo)
         lines.extend(self.doc_compile(module_repo, mod.name, submodules))
