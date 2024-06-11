@@ -402,6 +402,17 @@ pip:
         return (mod, mod.get_all_submodules()) if mod is not None else None
 
     def get_module_filter(self, module_folder: Optional[str]) -> Callable[[str], bool]:
+        """
+        Produce a function to filter module names, based on the `tool.inmanta-sphinx.docgent.module_filter` config option
+
+        As input, it gets the module folder. It read the `pyproject.toml` in the module and extract the filters.
+
+        If no config is found, it defaults to including everything
+
+        :param module_folder: the folder containing the module
+        :return: a function that, given the fully qualified name of a module, will return True if the module has to be included.
+        """
+
         if not module_folder:
             return lambda x: True
 
