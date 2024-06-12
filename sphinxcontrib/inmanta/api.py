@@ -17,7 +17,7 @@
 """
 
 from collections import defaultdict, OrderedDict
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple, Callable
 import os
 import re
 import shutil
@@ -25,6 +25,7 @@ import sys
 import tempfile
 
 import click
+import toml
 
 from inmanta import module, compiler, ast
 from inmanta.agent import handler
@@ -77,7 +78,7 @@ def parse_docstring(docstring):
             line = re.sub("\s+", " ", line.strip())
             match = ATTRIBUTE_LINE_REGEX.search(line)
             if match is None:
-                print("Unable to parse line: " + line, file=sys.stderr)
+                print("Comment empty: " + line, file=sys.stderr)
                 continue
 
             items = match.groups()
@@ -112,7 +113,9 @@ class DocModule(object):
 description: Project to generate docs
 repo: %s
 modulepath: %s
-    """ % (module_path, module_path))
+pip:
+  use_system_config: true
+""" % (module_path, module_path))
 
             os.chdir(project_dir)
             project = Project.get()
@@ -358,9 +361,6 @@ modulepath: %s
         if hasattr(module.metadata, "compiler_version") and module.metadata.compiler_version is not None:
             lines.append(" * This module requires compiler version %s or higher" % module.metadata.compiler_version)
 
-        if source_repo is not None:
-            lines.append(" * Upstream project: " + source_repo)
-
         lines.append("")
         return lines
 
@@ -401,6 +401,42 @@ modulepath: %s
         mod: Optional[module.Module] = get_module()
         return (mod, mod.get_all_submodules()) if mod is not None else None
 
+    def get_module_filter(self, module_folder: Optional[str]) -> Callable[[str], bool]:
+        """
+        Produce a function to filter module names, based on the `tool.inmanta-sphinx.docgent.module_filter` config option
+
+        As input, it gets the module folder. It read the `pyproject.toml` in the module and extract the filters.
+
+        If no config is found, it defaults to including everything
+
+        :param module_folder: the folder containing the module
+        :return: a function that, given the fully qualified name of a module, will return True if the module has to be included.
+        """
+
+        if not module_folder:
+            return lambda x: True
+
+        pyproject = os.path.join(module_folder, "pyproject.toml")
+        if not os.path.exists(pyproject):
+            return lambda x: True
+
+        with open(pyproject, "r") as fh:
+            pyproject_dict = toml.load(pyproject)
+            filters = pyproject_dict.get("tool",{}).get("inmanta-sphinx",{}).get("docgen",{}).get("module_filter", [])
+            if isinstance(filters, str):
+                filters = [filters]
+
+        parsed_filters = [re.compile(f) for f in filters]
+        if not parsed_filters:
+            return lambda x: True
+
+        def filter_func(name):
+            for filter in parsed_filters:
+                if filter.match(name):
+                    return True
+            return False
+        return filter_func
+
     def run(self, module_repo: Optional[str], module_name: str, extra_modules: Sequence[str], source_repo: str):
         """
         Run the module doc generation.
@@ -415,13 +451,18 @@ modulepath: %s
             raise Exception(f"Could not find module {module_name}.")
         mod, submodules = mod_data
 
+        module_filter = self.get_module_filter(None if not module_repo else os.path.join(module_repo, module_name))
+
         for name in extra_modules:
             extra_mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(module_repo, name)
             if extra_mod_data is not None:
                 submodules.extend(extra_mod_data[1])
 
+        submodules = sorted([sm for sm in set(submodules) if module_filter(sm)])
+        print("Selected sub-modules: " + ", ".join(submodules))
+
         lines = self.emit_intro(mod, source_repo)
-        lines.extend(self.doc_compile(module_repo, module_name, submodules))
+        lines.extend(self.doc_compile(module_repo, mod.name, submodules))
         lines = [line for line in lines if line is not None]
         return "\n".join(lines)
 

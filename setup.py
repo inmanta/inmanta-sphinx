@@ -6,7 +6,7 @@ This contrib extension, sphinxcontrib.inmanta provides a Sphinx
 domain for describing inmanta config and inmanta modules.
 '''
 
-requires = ['Sphinx>=1.5', 'click']
+requires = ['Sphinx>=1.5', 'click', "toml"]
 
 setup(
     name='inmanta-sphinx',
