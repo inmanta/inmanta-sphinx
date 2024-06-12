@@ -6,11 +6,11 @@ This contrib extension, sphinxcontrib.inmanta provides a Sphinx
 domain for describing inmanta config and inmanta modules.
 '''
 
-requires = ['Sphinx>=1.5', 'click']
+requires = ['Sphinx>=1.5', 'click', "toml"]
 
 setup(
     name='inmanta-sphinx',
-    version='1.9.0',
+    version='1.10.0',
     url='https://github.com/inmanta/inmanta-sphinx',
     license='ASL 2.0',
     author='Inmanta',

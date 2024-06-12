@@ -1,3 +1,8 @@
+# v 1.10.0 (2024-06-12)
+Changes in this release:
+- Use system pip index to install modules
+- Add the ability to filter using regexes for very large modules
+
 # v 1.9.0 (2024-01-25)
 Changes in this release:
 - Drop iso4/iso5 support
