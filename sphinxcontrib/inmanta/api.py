@@ -37,7 +37,9 @@ from inmanta.agent.handler import ResourceHandler
 from sphinx.util import docstrings
 
 
-ATTRIBUTE_REGEX = re.compile("(?::param|:attribute|:attr) (.*?)(?:(?=:param)|(?=:attribute)|(?=:attr)|\Z)", re.S)
+ATTRIBUTE_REGEX = re.compile(
+    "(?::param|:attribute|:attr) (.*?)(?:(?=:param)|(?=:attribute)|(?=:attr)|\Z)", re.S
+)
 ATTRIBUTE_LINE_REGEX = re.compile("([^\s:]+)(:)?\s(.*?)\Z")
 PARAM_REGEX = re.compile(":param|:attribute|:attr")
 AUTODOC_FILE = "autodoc.rst"
@@ -231,7 +233,7 @@ pip:
 
         :return: The documented handler as a list of str
         """
-        mod = cls.__module__[len("inmanta_plugins."):]
+        mod = cls.__module__[len("inmanta_plugins.") :]
         lines = [".. py:class:: %s.%s" % (mod, cls.__name__), ""]
         if cls.__doc__ is not None:
             lines.extend(self.prep_docstring(cls.__doc__, 1))
@@ -252,7 +254,7 @@ pip:
         :param opt: Attributes of the resource.
         :return: The documented resource as a list of str
         """
-        mod = cls.__module__[len("inmanta_plugins."):]
+        mod = cls.__module__[len("inmanta_plugins.") :]
         lines = [".. py:class:: %s.%s" % (mod, cls.__name__), ""]
         if cls.__doc__ is not None:
             lines.extend(self.prep_docstring(cls.__doc__, 1))
@@ -264,7 +266,7 @@ pip:
 
         handlers = []
         for cls in handler.Commander.get_handlers()[name].values():
-            mod = cls.__module__[len("inmanta_plugins."):]
+            mod = cls.__module__[len("inmanta_plugins.") :]
             handlers.append(":py:class:`%s.%s`" % (mod, cls.__name__))
         lines.append(" * Handlers " + ", ".join(handlers))
         lines.append("")
@@ -590,7 +592,6 @@ pip:
         module_repo: Optional[str],
         module_name: str,
         extra_modules: Sequence[str],
-        source_repo: Optional[str] = None,
     ) -> str:
         """
         Run the module doc generation.
@@ -599,7 +600,6 @@ pip:
             extra modules are v2 modules.
         :param module_name: The name of the module to generate docs for.
         :param extra_modules: The names of any extra modules.
-        :param source_repo: Deprecated, kept for backwards compatibility
 
         :returns: The documentation for this module as a string.
         """
@@ -764,13 +764,18 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
     return module_doc_dir
 
 
-def write_auto_doc(extra_modules, module, module_repo, out_file) -> None:
+def write_auto_doc(
+    extra_modules: Sequence[str], module: str, module_repo: Optional[str], out_file: str
+) -> None:
     """
-    :param extra_modules:
-    :param module:
-    :param module_repo:
-    :param out_file:
-    :return:
+    Wrapper around the ``DocModule.run()`` method to generate documentation for a module
+    and write it to a file.
+
+    :param extra_modules: Sequence of extra modules required to load the full AST for this module.
+    :param module: Name of the module for which to generate documentation.
+    :param module_repo: Module repo from which to download the module (if it is a v1 module).
+    :param out_file: Path to the file to write generated documentation to.
+    :return: None
     """
     doc = DocModule()
 
