@@ -42,50 +42,49 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _indent(text, n=2):
-    padding = ' ' * n
-    return '\n'.join(padding + l for l in text.splitlines())
+    padding = " " * n
+    return "\n".join(padding + l for l in text.splitlines())
 
 
 def _make_anchor_target(group_name, option_name):
     # We need to ensure this is unique across entire documentation
     # http://www.sphinx-doc.org/en/stable/markup/inline.html#ref-role
-    target = '%s.%s' % (group_name,
-                        option_name.lower())
+    target = "%s.%s" % (group_name, option_name.lower())
     return target
 
 
 def _format_group(group_name, opt_list):
-    group_name = group_name or 'DEFAULT'
-    LOGGER.info('[inmanta.config] %s', group_name)
+    group_name = group_name or "DEFAULT"
+    LOGGER.info("[inmanta.config] %s", group_name)
 
-    yield '.. inmanta.config:group:: %s' % group_name
-    yield ''
+    yield ".. inmanta.config:group:: %s" % group_name
+    yield ""
 
     for opt in sorted(opt_list.values(), key=lambda x: x.name):
-        yield '.. inmanta.config:option:: %s' % opt.name
-        yield ''
+        yield ".. inmanta.config:option:: %s" % opt.name
+        yield ""
 
         typ = opt.get_type()
         if typ:
-            yield _indent(':Type: %s' % typ)
+            yield _indent(":Type: %s" % typ)
         default = opt.get_default_desc()
         if default:
             default = str(default).strip()
-            yield _indent(':Default: %s' % default)
+            yield _indent(":Default: %s" % default)
 
-        yield ''
+        yield ""
 
         try:
-            help_text = opt.documentation % {'default': 'the value above'}
+            help_text = opt.documentation % {"default": "the value above"}
         except (TypeError, KeyError):
             # There is no mention of the default in the help string,
             # or the string had some unknown key
             help_text = opt.documentation
         if help_text:
             yield _indent(help_text)
-            yield ''
+            yield ""
 
-        yield ''
+        yield ""
 
 
 class ConfigOptXRefRole(XRefRole):
@@ -97,10 +96,10 @@ class ConfigOptXRefRole(XRefRole):
     def process_link(self, env, refnode, has_explicit_title, title, target):
         if not has_explicit_title:
             title = target
-        if '.' in target:
-            group, opt_name = target.split('.')
+        if "." in target:
+            group, opt_name = target.split(".")
         else:
-            group = 'DEFAULT'
+            group = "DEFAULT"
             opt_name = target
         anchor = _make_anchor_target(group, opt_name)
         return title, anchor
@@ -111,19 +110,19 @@ class ConfigGroup(rst.Directive):
     has_content = True
 
     option_spec = {
-        'namespace': directives.unchanged,
+        "namespace": directives.unchanged,
     }
 
     def run(self):
         env = self.state.document.settings.env
 
-        group_name = ' '.join(self.content)
+        group_name = " ".join(self.content)
 
-        cached_groups = env.domaindata['inmanta.config']['groups']
+        cached_groups = env.domaindata["inmanta.config"]["groups"]
 
         # Store the current group for use later in option directives
-        env.temp_data['inmanta.config:group'] = group_name
-        LOGGER.info('inmanta.config group %r', group_name)
+        env.temp_data["inmanta.config:group"] = group_name
+        LOGGER.info("inmanta.config group %r", group_name)
 
         # Store the location where this group is being defined
         # for use when resolving cross-references later.
@@ -131,7 +130,7 @@ class ConfigGroup(rst.Directive):
         cached_groups[group_name] = env.docname
 
         result = ViewList()
-        source_name = '<' + __name__ + '>'
+        source_name = "<" + __name__ + ">"
 
         def _add(text):
             "Append some text to the output result view to be parsed."
@@ -140,7 +139,7 @@ class ConfigGroup(rst.Directive):
         title = group_name
 
         _add(title)
-        _add('-' * len(title))
+        _add("-" * len(title))
         node = nodes.section()
         node.document = self.state.document
         nested_parse_with_titles(self.state, result, node)
@@ -150,7 +149,7 @@ class ConfigGroup(rst.Directive):
         # Compute the normalized target and set the node to have that
         # as an id
         target_name = group_name
-        first_child['ids'].append(target_name)
+        first_child["ids"].append(target_name)
 
         indexnode = addnodes.index(entries=[])
         return [indexnode] + node.children
@@ -158,23 +157,24 @@ class ConfigGroup(rst.Directive):
 
 class ConfigOption(ObjectDescription):
     "Description of a configuration option (.. option)."
+
     def handle_signature(self, sig, signode):
         """Transform an option description into RST nodes."""
         optname = sig
-        LOGGER.info('inmanta.config option %s', optname)
+        LOGGER.info("inmanta.config option %s", optname)
         # Insert a node into the output showing the option name
         signode += addnodes.desc_name(optname, optname)
-        signode['allnames'] = [optname]
+        signode["allnames"] = [optname]
         return optname
 
     def add_target_and_index(self, firstname, sig, signode):
-        cached_options = self.env.domaindata['inmanta.config']['options']
+        cached_options = self.env.domaindata["inmanta.config"]["options"]
         # Look up the current group name from the processing context
-        currgroup = self.env.temp_data.get('inmanta.config:group')
+        currgroup = self.env.temp_data.get("inmanta.config:group")
         # Compute the normalized target name for the option and give
         # that to the node as an id
         target_name = _make_anchor_target(currgroup, sig)
-        signode['ids'].append(target_name)
+        signode["ids"].append(target_name)
         self.state.document.note_explicit_target(signode)
         # Store the location of the option definition for later use in
         # resolving cross-references
@@ -203,10 +203,7 @@ def _format_option_help():
     opts = Config.get_config_options()
 
     for section, opt_list in sorted(opts.items(), key=lambda x: x[0]):
-        lines = _format_group(
-            group_name=section,
-            opt_list=opt_list
-        )
+        lines = _format_group(group_name=section, opt_list=opt_list)
         for line in lines:
             yield line
 
@@ -214,9 +211,9 @@ def _format_option_help():
 class ShowOptionsDirective(rst.Directive):
 
     option_spec = {
-        'split-namespaces': directives.flag,
-        'config-file': directives.unchanged,
-        'namespace-files': directives.unchanged,
+        "split-namespaces": directives.flag,
+        "config-file": directives.unchanged,
+        "namespace-files": directives.unchanged,
     }
 
     has_content = True
@@ -258,10 +255,13 @@ class ShowOptionsDirective(rst.Directive):
             except ModuleNotFoundError:
                 # The documentation lists all possible Python modules in the server codebase with config. Only the ones that exist will be
                 # rendered. This allows a single file for both OSS and ISO releases.
-                LOGGER.warning("Unable to load module %s, no config will be loaded for this module", namespace)
+                LOGGER.warning(
+                    "Unable to load module %s, no config will be loaded for this module",
+                    namespace,
+                )
 
         result = ViewList()
-        source_name = '<' + __name__ + '>'
+        source_name = "<" + __name__ + ">"
         for line in _format_option_help():
             result.append(line, source_name)
 
@@ -274,41 +274,42 @@ class ShowOptionsDirective(rst.Directive):
 
 class ConfigDomain(Domain):
     """inmanta.config domain."""
-    name = 'inmanta.config'
-    label = 'inmanta.config'
+
+    name = "inmanta.config"
+    label = "inmanta.config"
     object_types = {
-        'configoption': ObjType('configuration option', 'option'),
+        "configoption": ObjType("configuration option", "option"),
     }
     directives = {
-        'group': ConfigGroup,
-        'option': ConfigOption,
+        "group": ConfigGroup,
+        "option": ConfigOption,
     }
     roles = {
-        'option': ConfigOptXRefRole(),
-        'group': ConfigGroupXRefRole(),
+        "option": ConfigOptXRefRole(),
+        "group": ConfigGroupXRefRole(),
     }
     initial_data = {
-        'options': {},
-        'groups': {},
+        "options": {},
+        "groups": {},
     }
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         try:
-            if typ == 'option':
-                _, option_name = target.split('.', 1)
+            if typ == "option":
+                _, option_name = target.split(".", 1)
                 return make_refnode(
                     builder,
                     fromdocname,
-                    env.domaindata['inmanta.config']['options'][target],
+                    env.domaindata["inmanta.config"]["options"][target],
                     target,
                     contnode,
                     option_name,
                 )
-            if typ == 'group':
+            if typ == "group":
                 return make_refnode(
                     builder,
                     fromdocname,
-                    env.domaindata['inmanta.config']['groups'][target],
+                    env.domaindata["inmanta.config"]["groups"][target],
                     target,
                     contnode,
                     target,
@@ -320,5 +321,5 @@ class ConfigDomain(Domain):
 
 
 def setup(app):
-    app.add_directive('show-options', ShowOptionsDirective)
+    app.add_directive("show-options", ShowOptionsDirective)
     app.add_domain(ConfigDomain)

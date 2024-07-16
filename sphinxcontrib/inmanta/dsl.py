@@ -31,7 +31,7 @@ def get_first_statement(stmts):
     out = None
     line = float("inf")
     for stmt in stmts:
-        if(stmt.line > 0 and stmt.line < line):
+        if stmt.line > 0 and stmt.line < line:
             out = stmt
             line = stmt.line
     return out
@@ -43,22 +43,28 @@ class InmantaXRefRole(XRefRole):
 
 class InmantaObject(ObjectDescription):
     def add_target_and_index(self, name, sig, signode):
-        targetname = self.objtype + '-' + name
+        targetname = self.objtype + "-" + name
         if targetname not in self.state.document.ids:
-            signode['names'].append(targetname)
-            signode['ids'].append(targetname)
-            signode['first'] = (not self.names)
+            signode["names"].append(targetname)
+            signode["ids"].append(targetname)
+            signode["first"] = not self.names
             self.state.document.note_explicit_target(signode)
 
-            objects = self.env.domaindata['inmanta']['objects']
+            objects = self.env.domaindata["inmanta"]["objects"]
             key = (self.objtype, name)
             if key in objects:
-                self.state_machine.reporter.warning('duplicate description of %s %s, ' % (self.objtype, name) +
-                                                    'other instance in ' + self.env.doc2path(objects[key]), line=self.lineno)
+                self.state_machine.reporter.warning(
+                    "duplicate description of %s %s, " % (self.objtype, name)
+                    + "other instance in "
+                    + self.env.doc2path(objects[key]),
+                    line=self.lineno,
+                )
             objects[key] = self.env.docname
         indextext = self.get_index_text(self.objtype, name)
         if indextext:
-            self.indexnode['entries'].append(('single', indextext, targetname, '', None))
+            self.indexnode["entries"].append(
+                ("single", indextext, targetname, "", None)
+            )
 
     def get_index_text(self, objectname, name):
         return name
@@ -126,67 +132,81 @@ class InmantaDomain(Domain):
     label = "inmanta"
 
     object_types = {
-        'module': ObjType(_('module'), 'mod', 'obj'),
-        'entity': ObjType(_('entity'), 'func', 'obj'),
-        'attribute': ObjType(_('attribute'), 'attr', 'obj'),
-        'relation': ObjType(_('relation'), 'attr', 'obj'),
-        'implementation': ObjType(_('implementation'), 'attr', 'obj'),
-        'typedef': ObjType(_('typedef'), 'attr', 'obj')
+        "module": ObjType(_("module"), "mod", "obj"),
+        "entity": ObjType(_("entity"), "func", "obj"),
+        "attribute": ObjType(_("attribute"), "attr", "obj"),
+        "relation": ObjType(_("relation"), "attr", "obj"),
+        "implementation": ObjType(_("implementation"), "attr", "obj"),
+        "typedef": ObjType(_("typedef"), "attr", "obj"),
     }
     directives = {
-        'module': Entity,
-        'entity': Entity,
-        'attribute': Attribute,
-        'relation': Relation,
-        'implementation': Implementation,
-        'typedef': TypeDef,
+        "module": Entity,
+        "entity": Entity,
+        "attribute": Attribute,
+        "relation": Relation,
+        "implementation": Implementation,
+        "typedef": TypeDef,
     }
     roles = {
-        'entity': InmantaXRefRole(),
-        'attribute': InmantaXRefRole(),
-        'relation': InmantaXRefRole(),
-        'implementation': InmantaXRefRole(),
-        'typedef': InmantaXRefRole(),
+        "entity": InmantaXRefRole(),
+        "attribute": InmantaXRefRole(),
+        "relation": InmantaXRefRole(),
+        "implementation": InmantaXRefRole(),
+        "typedef": InmantaXRefRole(),
     }
     initial_data = {
-        'objects': {},  # fullname -> docname, objtype
+        "objects": {},  # fullname -> docname, objtype
     }
 
     def clear_doc(self, docname):
-        for (typ, name), doc in list(self.data['objects'].items()):
+        for (typ, name), doc in list(self.data["objects"].items()):
             if doc == docname:
-                del self.data['objects'][typ, name]
+                del self.data["objects"][typ, name]
 
     def merge_domaindata(self, docnames, otherdata):
         # XXX check duplicates
-        for (typ, name), doc in otherdata['objects'].items():
+        for (typ, name), doc in otherdata["objects"].items():
             if doc in docnames:
-                self.data['objects'][typ, name] = doc
+                self.data["objects"][typ, name] = doc
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
-        objects = self.data['objects']
+        objects = self.data["objects"]
         for objtype in self.object_types.keys():
             if (objtype, target) in objects:
-                return make_refnode(builder, fromdocname, objects[objtype, target], objtype + '-' + target,
-                                    contnode, target + ' ' + objtype)
+                return make_refnode(
+                    builder,
+                    fromdocname,
+                    objects[objtype, target],
+                    objtype + "-" + target,
+                    contnode,
+                    target + " " + objtype,
+                )
 
-    def resolve_any_xref(self, env, fromdocname, builder, target,
-                         node, contnode):
-        objects = self.data['objects']
+    def resolve_any_xref(self, env, fromdocname, builder, target, node, contnode):
+        objects = self.data["objects"]
         results = []
         for objtype in self.object_types:
-            if (objtype, target) in self.data['objects']:
-                results.append(('inmanta:' + self.role_for_objtype(objtype),
-                                make_refnode(builder, fromdocname, objects[objtype, target], objtype + '-' + target,
-                                             contnode, target + ' ' + objtype)))
+            if (objtype, target) in self.data["objects"]:
+                results.append(
+                    (
+                        "inmanta:" + self.role_for_objtype(objtype),
+                        make_refnode(
+                            builder,
+                            fromdocname,
+                            objects[objtype, target],
+                            objtype + "-" + target,
+                            contnode,
+                            target + " " + objtype,
+                        ),
+                    )
+                )
         return results
 
     def get_objects(self):
-        for (typ, name), docname in self.data['objects'].items():
-            yield name, name, typ, docname, typ + '-' + name, 1
+        for (typ, name), docname in self.data["objects"].items():
+            yield name, name, typ, docname, typ + "-" + name, 1
 
 
 def setup(app):
     app.add_domain(InmantaDomain)
     app.add_lexer("inmanta", InmantaLexer)
-
