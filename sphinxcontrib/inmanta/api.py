@@ -231,7 +231,7 @@ pip:
 
         :return: The documented handler as a list of str
         """
-        mod = cls.__module__[len("inmanta_plugins.") :]
+        mod = cls.__module__[len("inmanta_plugins."):]
         lines = [".. py:class:: %s.%s" % (mod, cls.__name__), ""]
         if cls.__doc__ is not None:
             lines.extend(self.prep_docstring(cls.__doc__, 1))
@@ -252,7 +252,7 @@ pip:
         :param opt: Attributes of the resource.
         :return: The documented resource as a list of str
         """
-        mod = cls.__module__[len("inmanta_plugins.") :]
+        mod = cls.__module__[len("inmanta_plugins."):]
         lines = [".. py:class:: %s.%s" % (mod, cls.__name__), ""]
         if cls.__doc__ is not None:
             lines.extend(self.prep_docstring(cls.__doc__, 1))
@@ -264,7 +264,7 @@ pip:
 
         handlers = []
         for cls in handler.Commander.get_handlers()[name].values():
-            mod = cls.__module__[len("inmanta_plugins.") :]
+            mod = cls.__module__[len("inmanta_plugins."):]
             handlers.append(":py:class:`%s.%s`" % (mod, cls.__name__))
         lines.append(" * Handlers " + ", ".join(handlers))
         lines.append("")
@@ -533,7 +533,7 @@ pip:
                 # legacy mode
                 if module_repo is None:
                     raise ValueError(
-                        f"Please pass the directory where all modules modules are located."
+                        "Please pass the directory where all modules modules are located."
                     )
                 try:
                     return module.Module(None, os.path.join(module_repo, module_name))
@@ -562,7 +562,7 @@ pip:
         if not os.path.exists(pyproject):
             return lambda x: True
 
-        with open(pyproject, "r") as fh:
+        with open(pyproject, "r"):
             pyproject_dict = toml.load(pyproject)
             filters = (
                 pyproject_dict.get("tool", {})
