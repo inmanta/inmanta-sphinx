@@ -17,7 +17,7 @@
 """
 
 from collections import defaultdict, OrderedDict
-from typing import List, Optional, Sequence, Tuple, Callable, Mapping, Any
+from typing import List, Optional, Sequence, Tuple, Callable, Mapping, Any, Union
 import os
 import re
 import shutil
@@ -58,7 +58,7 @@ def format_multiplicity(rel):
     return str(low) + ":" + str(high)
 
 
-def parse_docstring(docstring: str) -> dict[str : dict[str, str] | list[str]]:
+def parse_docstring(docstring: str) -> dict[str : Union[dict[str, str], list[str]]]:
     """
     Parse a docstring and return its components. Inspired by
     https://github.com/openstack/rally/blob/master/rally/common/plugin/info.py#L31-L79
