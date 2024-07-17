@@ -223,7 +223,7 @@ pip:
         return []
 
     def emit_handler(
-        self, entity: str, name: str, cls: typing.Type[ResourceHandler[Any]]
+        self, entity: str, name: str, cls: typing.Type[ResourceHandler]
     ) -> list[str]:
         """
         Generate documentation for a handler.
