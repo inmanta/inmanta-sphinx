@@ -15,7 +15,7 @@
 
     Contact: code@inmanta.com
 """
-
+import typing
 from collections import defaultdict, OrderedDict
 from typing import List, Optional, Sequence, Tuple, Callable, Mapping, Any, Union
 import os
@@ -223,7 +223,7 @@ pip:
         return []
 
     def emit_handler(
-        self, entity: str, name: str, cls: type[ResourceHandler[Any]]
+        self, entity: str, name: str, cls: typing.Type[ResourceHandler[Any]]
     ) -> list[str]:
         """
         Generate documentation for a handler.
