@@ -1,5 +1,6 @@
 # v 1.11.0 (?)
 Changes in this release:
+- Add new command ``generate-api-doc-v2``
 
 # v 1.10.0 (2024-06-12)
 Changes in this release:
