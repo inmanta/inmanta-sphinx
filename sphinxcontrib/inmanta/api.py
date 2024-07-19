@@ -402,7 +402,7 @@ pip:
         """
         Generate documentation for a single implementation.
 
-        :param implementation: The implementation being documented
+        :param impl: The implementation being documented
         :return: The generated implementation documentation as a list of str.
         """
         lines = []
@@ -686,7 +686,7 @@ def generate_api_doc(
 @click.option(
     "--out-dir", "-d", help="Place doc output in this directory.", required=True
 )
-def generate_api_doc_v2(
+def generate_module_doc_v2(
     module_repo: Optional[str],
     module_name: str,
     extra_modules: Sequence[str],
@@ -750,16 +750,19 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
     module_doc_dir = os.path.abspath(os.path.join(out_dir, module_name))
     os.makedirs(module_doc_dir)
 
-    files_to_copy = [
+    to_copy = [
         os.path.join(module_dir, "README.md"),
         os.path.join(module_dir, "changelog.md"),
         os.path.join(module_dir, "docs"),
     ]
 
-    for file in files_to_copy:
+    for file in to_copy:
         if not os.path.exists(file):
             continue
-        shutil.copy(file, module_doc_dir)
+        if os.path.isdir(file):
+            shutil.copytree(file, module_doc_dir, dirs_exist_ok=True)
+        else:
+            shutil.copy(file, module_doc_dir)
 
     return module_doc_dir
 
