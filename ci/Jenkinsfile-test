@@ -96,7 +96,7 @@ pipeline {
               checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
 
               sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
+                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
                 $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
               '''
             }
@@ -113,7 +113,7 @@ pipeline {
               sh '$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre'
 
               sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module_repo $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
+                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
                 $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
               '''
             }
