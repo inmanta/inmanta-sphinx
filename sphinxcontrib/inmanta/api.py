@@ -15,6 +15,7 @@
 
     Contact: code@inmanta.com
 """
+import logging
 import typing
 from collections import defaultdict, OrderedDict
 from typing import List, Optional, Sequence, Tuple, Callable, Mapping, Any, Union
@@ -44,6 +45,9 @@ ATTRIBUTE_LINE_REGEX = re.compile("([^\s:]+)(:)?\s(.*?)\Z")
 PARAM_REGEX = re.compile(":param|:attribute|:attr")
 AUTODOC_FILE = "autodoc.rst"
 
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel("DEBUG")
 
 def format_multiplicity(rel):
     low = rel.low
@@ -749,20 +753,21 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
     """
     module_doc_dir = os.path.abspath(os.path.join(out_dir, module_name))
     os.makedirs(module_doc_dir)
+    LOGGER.debug("build_module_doc_directory...")
+    src_to_dest_map = {
+        os.path.join(module_dir, "README.md"): module_doc_dir,
+        os.path.join(module_dir, "CHANGELOG.md"): module_doc_dir,
+        os.path.join(module_dir, "docs"): os.path.join(module_doc_dir, "docs"),
+    }
+    LOGGER.debug(f"{src_to_dest_map=}")
 
-    to_copy = [
-        os.path.join(module_dir, "README.md"),
-        os.path.join(module_dir, "changelog.md"),
-        os.path.join(module_dir, "docs"),
-    ]
-
-    for file in to_copy:
-        if not os.path.exists(file):
+    for src, dest in src_to_dest_map.items():
+        if not os.path.exists(src):
             continue
-        if os.path.isdir(file):
-            shutil.copytree(file, module_doc_dir, dirs_exist_ok=True)
+        if os.path.isdir(src):
+            shutil.copytree(src, dest, dirs_exist_ok=True)
         else:
-            shutil.copy(file, module_doc_dir)
+            shutil.copy(src, dest)
 
     return module_doc_dir
 
