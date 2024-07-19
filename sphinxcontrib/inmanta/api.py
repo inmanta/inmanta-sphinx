@@ -753,14 +753,11 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
     """
     module_doc_dir = os.path.abspath(os.path.join(out_dir, module_name))
     os.makedirs(module_doc_dir)
-    LOGGER.debug("build_module_doc_directory...")
     src_to_dest_map = {
-        os.path.join(module_dir, "README.md"): module_doc_dir,
-        os.path.join(module_dir, "CHANGELOG.md"): module_doc_dir,
+        os.path.join(module_dir, "README.md"): os.path.join(module_doc_dir, "README.md"),
+        os.path.join(module_dir, "CHANGELOG.md"): os.path.join(module_doc_dir, "CHANGELOG.md"),
         os.path.join(module_dir, "docs"): os.path.join(module_doc_dir, "docs"),
     }
-    LOGGER.debug(f"{src_to_dest_map=}")
-
     for src, dest in src_to_dest_map.items():
         if not os.path.exists(src):
             continue
