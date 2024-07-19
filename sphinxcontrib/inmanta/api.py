@@ -15,6 +15,7 @@
 
     Contact: code@inmanta.com
 """
+
 import logging
 import typing
 from collections import defaultdict, OrderedDict
@@ -46,8 +47,6 @@ PARAM_REGEX = re.compile(":param|:attribute|:attr")
 AUTODOC_FILE = "autodoc.rst"
 
 
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel("DEBUG")
 
 def format_multiplicity(rel):
     low = rel.low
@@ -502,7 +501,9 @@ pip:
         lines.append("")
         return lines
 
-    def _get_modules(self, module_source_dir: Optional[str], module_name: str) -> Optional[Tuple[module.Module, List[str]]]:
+    def _get_modules(
+        self, module_source_dir: Optional[str], module_name: str
+    ) -> Optional[Tuple[module.Module, List[str]]]:
         """
         Given a module name, returns the module object and a list of all submodule names.
 
@@ -510,7 +511,6 @@ pip:
             module.
         :param module_name: The name of the module to fetch.
         """
-
         def get_module() -> Optional[module.Module]:
             """
             Returns the module object.
@@ -540,7 +540,9 @@ pip:
                         "Please pass the directory where all modules modules are located."
                     )
                 try:
-                    return module.Module(None, os.path.join(module_source_dir, module_name))
+                    return module.Module(
+                        None, os.path.join(module_source_dir, module_name)
+                    )
                 except (module.InvalidModuleException, module.InvalidMetadata):
                     return None
 
@@ -589,7 +591,9 @@ pip:
 
         return filter_func
 
-    def run(self, module_source_dir: str, module_name: str, extra_modules: Sequence[str]) -> str:
+    def run(
+        self, module_source_dir: str, module_name: str, extra_modules: Sequence[str]
+    ) -> str:
         """
         Run the module doc generation.
 
@@ -599,13 +603,17 @@ pip:
 
         :returns: The documentation for this module as a string.
         """
-        mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(module_source_dir, module_name)
+        mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(
+            module_source_dir, module_name
+        )
         if mod_data is None:
             raise Exception(f"Could not find module {module_name}.")
         mod, submodules = mod_data
 
         module_filter = self.get_module_filter(
-            None if not module_source_dir else os.path.join(module_source_dir, module_name)
+            None
+            if not module_source_dir
+            else os.path.join(module_source_dir, module_name)
         )
 
         for name in extra_modules:
@@ -623,46 +631,9 @@ pip:
         lines = [line for line in lines if line is not None]
         return "\n".join(lines)
 
-
-# @click.group()
-# def cli():
-#     pass
-#
-#
-# @cli.command(deprecated=True)
-# @click.option(
-#     "--module_repo",
-#     help=(
-#         "The repo where all v1 modules are stored (local file). Ignored for v2 modules, which are always fetched from the"
-#         " Python environment."
-#     ),
-# )
-# @click.option("--module", help="The module to generate api docs for", required=True)
-# @click.option(
-#     "--extra-modules",
-#     "-m",
-#     help="Extra modules that should be loaded to render the docs",
-#     multiple=True,
-# )
-# @click.option("--source-repo", help="The repo where the upstream source is located.")
-# @click.option("--file", "-f", help="Save the generated result here.", required=True)
-# def generate_api_doc(
-#     module_repo: Optional[str],
-#     module: str,
-#     extra_modules: Sequence[str],
-#     source_repo: str,
-#     file: str,
-# ):
-#     """
-#     Generate API documentation for module and write it to the provided file.
-#     """
-#
-#     write_auto_doc(extra_modules, module, module_repo, file)
-
-
-# @cli.command()
+@click.command()
 @click.option(
-    "--module_source_dir",
+    "--module-sources",
     help=(
         "The path to the local directory where all module sources (both v1 and v2) are stored."
     ),
@@ -677,7 +648,10 @@ pip:
     multiple=True,
 )
 @click.option(
-    "--out-dir", "-d", help="Path to directory in which to put documentation.", required=True
+    "--out-dir",
+    "-d",
+    help="Path to directory in which to put documentation.",
+    required=True,
 )
 def generate_module_doc_v2(
     module_sources: str,
@@ -713,8 +687,12 @@ def generate_module_doc_v2(
     #     ├─ <module_name>.rst
 
     if not os.path.exists(readme_file):
-        write_auto_doc(extra_modules=extra_modules, module_name=module_name, module_source_dir=module_source_dir,
-                       out_file=os.path.join(out_dir, module_name, ".rst"))
+        write_auto_doc(
+            extra_modules=extra_modules,
+            module_name=module_name,
+            module_source_dir=module_sources,
+            out_file=os.path.join(out_dir, module_name + ".rst"),
+        )
         return
 
     # Module source contains a README -> populate:
@@ -730,8 +708,14 @@ def generate_module_doc_v2(
     with open(readme_file, "r") as f:
         for line in f:
             if AUTODOC_FILE in line:
-                write_auto_doc(extra_modules=extra_modules, module_name=module_name, module_source_dir=module_source_dir,
-                               out_file=os.path.join(os.path.abspath(module_doc_dir), AUTODOC_FILE))
+                write_auto_doc(
+                    extra_modules=extra_modules,
+                    module_name=module_name,
+                    module_source_dir=module_source_dir,
+                    out_file=os.path.join(
+                        os.path.abspath(module_doc_dir), AUTODOC_FILE
+                    ),
+                )
                 break
 
 
@@ -748,8 +732,12 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
     module_doc_dir = os.path.abspath(os.path.join(out_dir, module_name))
     os.makedirs(module_doc_dir)
     src_to_dest_map = {
-        os.path.join(module_dir, "README.md"): os.path.join(module_doc_dir, "README.md"),
-        os.path.join(module_dir, "CHANGELOG.md"): os.path.join(module_doc_dir, "CHANGELOG.md"),
+        os.path.join(module_dir, "README.md"): os.path.join(
+            module_doc_dir, "README.md"
+        ),
+        os.path.join(module_dir, "CHANGELOG.md"): os.path.join(
+            module_doc_dir, "CHANGELOG.md"
+        ),
         os.path.join(module_dir, "docs"): os.path.join(module_doc_dir, "docs"),
     }
     for src, dest in src_to_dest_map.items():
@@ -763,7 +751,12 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
     return module_doc_dir
 
 
-def write_auto_doc(extra_modules: Sequence[str], module_name: str, module_source_dir: Optional[str], out_file: str) -> None:
+def write_auto_doc(
+    extra_modules: Sequence[str],
+    module_name: str,
+    module_source_dir: Optional[str],
+    out_file: str,
+) -> None:
     """
     Wrapper around the ``DocModule.run()`` method to generate documentation for a module
     and write it to a file. This method expects the module source to live in a <module_name> subdirectory
@@ -777,8 +770,13 @@ def write_auto_doc(extra_modules: Sequence[str], module_name: str, module_source
     """
     doc = DocModule()
 
-    auto_doc = doc.run(module_source_dir=os.path.abspath(module_source_dir), module_name=module_name,
-                       extra_modules=extra_modules)
+    auto_doc = doc.run(
+        module_source_dir=os.path.abspath(module_source_dir),
+        module_name=module_name,
+        extra_modules=extra_modules,
+    )
+    os.makedirs(os.path.dirname(out_file), exist_ok=True)
+
     with open(out_file, "w+") as fd:
         fd.write(auto_doc)
 
