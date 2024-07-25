@@ -1,6 +1,7 @@
 # v 1.11.0 (?)
 Changes in this release:
-- Add new command ``generate-module-doc-v2``
+- Update command to generate module documentation.
+- Use the README.md file to control what is included in the documentation.
 
 # v 1.10.0 (2024-06-12)
 Changes in this release:
