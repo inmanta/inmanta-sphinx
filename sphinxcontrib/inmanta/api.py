@@ -607,7 +607,7 @@ pip:
             module_source_dir, module_name
         )
         if mod_data is None:
-            raise Exception(f"Could not find module {module_name}.")
+            raise Exception(f"Could not find module {module_name} in {module_source_dir}.")
         mod, submodules = mod_data
 
         module_filter = self.get_module_filter(
@@ -711,7 +711,7 @@ def generate_module_doc(
                 write_auto_doc(
                     extra_modules=extra_modules,
                     module_name=module_name,
-                    module_source_dir=module_source_dir,
+                    module_source_dir=module_sources,
                     out_file=os.path.join(
                         os.path.abspath(module_doc_dir), AUTODOC_FILE
                     ),
