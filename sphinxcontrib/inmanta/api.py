@@ -653,7 +653,7 @@ pip:
     help="Path to directory in which to put documentation.",
     required=True,
 )
-def generate_module_doc_v2(
+def generate_module_doc(
     module_sources: str,
     module_name: str,
     extra_modules: Sequence[str],
@@ -782,4 +782,4 @@ def write_auto_doc(
 
 
 if __name__ == "__main__":
-    generate_module_doc_v2()
+    generate_module_doc()
