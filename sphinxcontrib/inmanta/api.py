@@ -655,11 +655,20 @@ pip:
     help="Path to directory in which to put documentation.",
     required=True,
 )
+@click.option(
+    "--autodoc-only",
+    "-a",
+    is_flag=True, show_default=True, default=False,
+    help="Ignore the README.md file when building documentation for this module "
+         "and generate documentation under <out_dir>/<module_name>.rst.",
+    required=True,
+)
 def generate_module_doc(
     module_sources: str,
     module_name: str,
     extra_modules: Sequence[str],
     out_dir: str,
+    autodoc_only: bool = False,
 ):
     """
     Generate API documentation for a module. This command expects the module source to live in a directory
@@ -688,7 +697,7 @@ def generate_module_doc(
     # <out_dir>/
     #     ├─ <module_name>.rst
 
-    if not os.path.exists(readme_file):
+    if not os.path.exists(readme_file) or autodoc_only:
         write_auto_doc(
             extra_modules=extra_modules,
             module_name=module_name,
