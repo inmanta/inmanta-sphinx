@@ -16,10 +16,10 @@
     Contact: code@inmanta.com
 """
 
-import logging
 import typing
 from collections import defaultdict, OrderedDict
-from typing import List, Optional, Sequence, Tuple, Callable, Mapping, Any, Union
+from typing import Optional, Union
+from collections.abc import Sequence, Callable, Mapping
 import os
 import re
 import shutil
@@ -47,7 +47,6 @@ PARAM_REGEX = re.compile(":param|:attribute|:attr")
 AUTODOC_FILE = "autodoc.rst"
 
 
-
 def format_multiplicity(rel):
     low = rel.low
     high = rel.high
@@ -61,7 +60,7 @@ def format_multiplicity(rel):
     return str(low) + ":" + str(high)
 
 
-def parse_docstring(docstring: str) -> dict[str : Union[dict[str, str], list[str]]]:
+def parse_docstring(docstring: str) -> dict[str, Union[dict[str, str], list[str]]]:
     """
     Parse a docstring and return its components. Inspired by
     https://github.com/openstack/rally/blob/master/rally/common/plugin/info.py#L31-L79
@@ -503,7 +502,7 @@ pip:
 
     def _get_modules(
         self, module_source_dir: Optional[str], module_name: str
-    ) -> Optional[Tuple[module.Module, List[str]]]:
+    ) -> Optional[tuple[module.Module, list[str]]]:
         """
         Given a module name, returns the module object and a list of all submodule names.
 
@@ -511,6 +510,7 @@ pip:
             module.
         :param module_name: The name of the module to fetch.
         """
+
         def get_module() -> Optional[module.Module]:
             """
             Returns the module object.
@@ -568,16 +568,15 @@ pip:
         if not os.path.exists(pyproject):
             return lambda x: True
 
-        with open(pyproject, "r"):
-            pyproject_dict = toml.load(pyproject)
-            filters = (
-                pyproject_dict.get("tool", {})
-                .get("inmanta-sphinx", {})
-                .get("docgen", {})
-                .get("module_filter", [])
-            )
-            if isinstance(filters, str):
-                filters = [filters]
+        pyproject_dict = toml.load(pyproject)
+        filters = (
+            pyproject_dict.get("tool", {})
+            .get("inmanta-sphinx", {})
+            .get("docgen", {})
+            .get("module_filter", [])
+        )
+        if isinstance(filters, str):
+            filters = [filters]
 
         parsed_filters = [re.compile(f) for f in filters]
         if not parsed_filters:
@@ -603,11 +602,13 @@ pip:
 
         :returns: The documentation for this module as a string.
         """
-        mod_data: Optional[Tuple[module.Module, List[str]]] = self._get_modules(
+        mod_data: Optional[tuple[module.Module, list[str]]] = self._get_modules(
             module_source_dir, module_name
         )
         if mod_data is None:
-            raise Exception(f"Could not find module {module_name} in {module_source_dir}.")
+            raise Exception(
+                f"Could not find module {module_name} in {module_source_dir}."
+            )
         mod, submodules = mod_data
 
         module_filter = self.get_module_filter(
@@ -617,7 +618,7 @@ pip:
         )
 
         for name in extra_modules:
-            extra_mod_data: Optional[Tuple[module.Module, List[str]]] = (
+            extra_mod_data: Optional[tuple[module.Module, list[str]]] = (
                 self._get_modules(module_source_dir, name)
             )
             if extra_mod_data is not None:
@@ -630,6 +631,7 @@ pip:
         lines.extend(self.doc_compile(module_source_dir, mod.name, submodules))
         lines = [line for line in lines if line is not None]
         return "\n".join(lines)
+
 
 @click.command()
 @click.option(
