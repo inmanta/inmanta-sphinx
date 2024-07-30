@@ -637,7 +637,7 @@ pip:
 @click.option(
     "--module-sources",
     help=(
-        "The path to the local directory where all module sources (both v1 and v2) are stored."
+        "The path to the local directory where all module sources (v1 or v2) are stored."
     ),
 )
 @click.option(
@@ -686,8 +686,8 @@ def generate_module_doc(
     In addition, if the README.md file references ``autodoc.rst``, then api documentation for this module will be
     generated and placed in a ``autodoc.rst`` file in the <module_name> directory
 
-    If the module doesn't contain a README.md, api documentation for this module is generated and placed in a
-    <module_name>.rst file in <out_dir>.
+    If the module doesn't contain a README.md or if the `--autodoc-only` option is provided, then the
+    api documentation for this module is generated and placed in a <module_name>.rst file in <out_dir>.
     """
 
     module_source_dir = os.path.abspath(os.path.join(module_sources, module_name))
@@ -733,7 +733,7 @@ def generate_module_doc(
 def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> str:
     """
     Create a documentation directory named <module_name> in <out_dir> directory and return the path to it.
-    In addition, relevant documentation files/directories
+    In addition, relevant documentation files/directories are copied to this directory from <module_dir> path.
 
     :param out_dir: Root dir in which to create the <module_name> directory.
     :param module_dir: Path to the module.
@@ -755,7 +755,7 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
         if not os.path.exists(src):
             continue
         if os.path.isdir(src):
-            shutil.copytree(src, dest, dirs_exist_ok=True)
+            shutil.copytree(src, dest)
         else:
             shutil.copy(src, dest)
 
