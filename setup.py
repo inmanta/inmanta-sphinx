@@ -31,8 +31,6 @@ setup(
     ],
     platforms='any',
     packages=['sphinxcontrib.inmanta'],
-    package_dir={
-        '': 'src'},
     include_package_data=True,
     install_requires=requires,
     entry_points='''
