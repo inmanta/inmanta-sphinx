@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_namespace_packages
+from setuptools import setup
 
 long_desc = '''
 This contrib extension, sphinxcontrib.inmanta provides a Sphinx
@@ -30,7 +30,7 @@ setup(
         'Topic :: Utilities',
     ],
     platforms='any',
-    packages=find_namespace_packages(where='src/', include=['sphinxcontrib.inmanta']),
+    packages=['sphinxcontrib.inmanta'],
     package_dir={
         '': 'src'},
     include_package_data=True,
