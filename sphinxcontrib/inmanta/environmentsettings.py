@@ -43,15 +43,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _indent(text, n=2):
-    padding = ' ' * n
-    return '\n'.join(padding + l for l in text.splitlines())
+    padding = " " * n
+    return "\n".join(padding + l for l in text.splitlines())
 
 
 def _make_anchor_target(group_name, option_name):
     # We need to ensure this is unique across entire documentation
     # http://www.sphinx-doc.org/en/stable/markup/inline.html#ref-role
-    target = '%s.%s' % (group_name,
-                        option_name.lower())
+    target = "%s.%s" % (group_name, option_name.lower())
     return target
 
 
@@ -64,10 +63,10 @@ class ConfigOptXRefRole(XRefRole):
     def process_link(self, env, refnode, has_explicit_title, title, target):
         if not has_explicit_title:
             title = target
-        if '.' in target:
-            group, opt_name = target.split('.')
+        if "." in target:
+            group, opt_name = target.split(".")
         else:
-            group = 'DEFAULT'
+            group = "DEFAULT"
             opt_name = target
         anchor = opt_name.lower()
         return title, anchor
@@ -75,19 +74,20 @@ class ConfigOptXRefRole(XRefRole):
 
 class EnvironmentSetting(ObjectDescription):
     "Description of a configuration option (.. option)."
+
     def handle_signature(self, sig, signode):
         """Transform an option description into RST nodes."""
         optname = sig
-        LOGGER.info('inmanta.environment-settings setting %s', optname)
+        LOGGER.info("inmanta.environment-settings setting %s", optname)
         # Insert a node into the output showing the option name
         signode += addnodes.desc_name(optname, optname)
-        signode['allnames'] = [optname]
+        signode["allnames"] = [optname]
         return optname
 
     def add_target_and_index(self, firstname, sig, signode):
-        cached_options = self.env.domaindata['inmanta.environment-settings']['setting']
+        cached_options = self.env.domaindata["inmanta.environment-settings"]["setting"]
         target_name = sig.lower()
-        signode['ids'].append(target_name)
+        signode["ids"].append(target_name)
         self.state.document.note_explicit_target(signode)
         # Store the location of the option definition for later use in
         # resolving cross-references
@@ -104,7 +104,9 @@ def _format_setting_help():
     settings: List[data.Setting]
     if hasattr(ApplicationContext, "get_environment_settings"):
         bootloader = InmantaBootloader()
-        ctx: ApplicationContext = bootloader.load_slices(load_all_extensions=True, only_register_environment_settings=True)
+        ctx: ApplicationContext = bootloader.load_slices(
+            load_all_extensions=True, only_register_environment_settings=True
+        )
         settings = ctx.get_environment_settings()
     else:
         # Fallback for older version of inmanta-core that don't have support to collect environment settings via the bootloader.
@@ -118,8 +120,12 @@ def _format_setting_help():
         else:
             yield _indent(f":Type: {setting.typ}: {', '.join(setting.allowed_values)}")
 
-        default_value = "''" if isinstance(setting.default, str) and not setting.default else setting.default
-        yield _indent(f':Default: {default_value}')
+        default_value = (
+            "''"
+            if isinstance(setting.default, str) and not setting.default
+            else setting.default
+        )
+        yield _indent(f":Default: {default_value}")
         yield ""
         yield _indent(setting.doc)
 
@@ -136,7 +142,7 @@ class ShowEnvironmentSettingsDirective(rst.Directive):
             importlib.import_module(namespace)
 
         result = ViewList()
-        source_name = '<' + __name__ + '>'
+        source_name = "<" + __name__ + ">"
         for line in _format_setting_help():
             result.append(line, source_name)
 
@@ -149,28 +155,29 @@ class ShowEnvironmentSettingsDirective(rst.Directive):
 
 class EnvironmentSettingsDomain(Domain):
     """inmanta.config domain."""
-    name = 'inmanta.environment-settings'
-    label = 'inmanta.environment-settings'
+
+    name = "inmanta.environment-settings"
+    label = "inmanta.environment-settings"
     object_types = {
-        'setting': ObjType('environment setting', 'setting'),
+        "setting": ObjType("environment setting", "setting"),
     }
     directives = {
-        'setting': EnvironmentSetting,
+        "setting": EnvironmentSetting,
     }
     roles = {
-        'setting': ConfigOptXRefRole(),
+        "setting": ConfigOptXRefRole(),
     }
     initial_data = {
-        'setting': {},
+        "setting": {},
     }
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
-        if typ == 'setting':
+        if typ == "setting":
             try:
                 return make_refnode(
                     builder,
                     fromdocname,
-                    env.domaindata['inmanta.environment-settings']['setting'][target],
+                    env.domaindata["inmanta.environment-settings"]["setting"][target],
                     target,
                     contnode,
                     target,
@@ -182,5 +189,5 @@ class EnvironmentSettingsDomain(Domain):
 
 
 def setup(app):
-    app.add_directive('show-environment-settings', ShowEnvironmentSettingsDirective)
+    app.add_directive("show-environment-settings", ShowEnvironmentSettingsDirective)
     app.add_domain(EnvironmentSettingsDomain)

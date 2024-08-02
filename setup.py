@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from setuptools import setup
 
 long_desc = '''
 This contrib extension, sphinxcontrib.inmanta provides a Sphinx
@@ -10,7 +10,7 @@ requires = ['Sphinx>=1.5', 'click', "toml"]
 
 setup(
     name='inmanta-sphinx',
-    version='1.10.0',
+    version='1.11.0',
     url='https://github.com/inmanta/inmanta-sphinx',
     license='ASL 2.0',
     author='Inmanta',
@@ -30,10 +30,9 @@ setup(
         'Topic :: Utilities',
     ],
     platforms='any',
-    packages=find_packages(),
+    packages=['sphinxcontrib.inmanta'],
     include_package_data=True,
     install_requires=requires,
-    namespace_packages=['sphinxcontrib'],
     entry_points='''
         [console_scripts]
         sphinx-inmanta-api=sphinxcontrib.inmanta.api:generate_api_doc
