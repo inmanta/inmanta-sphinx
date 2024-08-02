@@ -1,4 +1,4 @@
-# v 1.11.0 (?)
+# v 1.11.0 (2024-08-02)
 Changes in this release:
 - Update command to generate module documentation.
 - Use the README.md file to control what is included in the documentation.
