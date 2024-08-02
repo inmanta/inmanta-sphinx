@@ -1,3 +1,6 @@
+# v 1.12.0 (?)
+Changes in this release:
+
 # v 1.11.0 (2024-08-02)
 Changes in this release:
 - Update command to generate module documentation.
