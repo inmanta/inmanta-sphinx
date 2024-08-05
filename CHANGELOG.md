@@ -4,6 +4,7 @@ Changes in this release:
 - Update command to generate module documentation:
     - replaced `--file` argument with `--out-dir` to support multi-file docs
     - renamed `--module_repo` to `--module-sources`
+    - renamed `--module` to `--module-name`
 
 # v 1.11.0 (2024-08-02)
 This release was yanked and rereleased as 2.0.0 due to breaking changes in the interface
