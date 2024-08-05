@@ -1,4 +1,4 @@
-# v 2.0.0 (2024-08-05)
+# v 1.2.0 (?)
 Changes in this release:
 - Use the README.md file to control what is included in the documentation. Use `--autodoc-only` to restore the previous behavior.
 - Update command to generate module documentation:
