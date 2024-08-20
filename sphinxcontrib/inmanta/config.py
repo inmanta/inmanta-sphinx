@@ -19,31 +19,28 @@
 # based on oslo_config.sphinxext
 # http://docs.openstack.org/developer/oslo.config/sphinxext.html
 
-import importlib
 import glob
+import importlib
 import os.path
 
 from docutils import nodes
 from docutils.parsers import rst
 from docutils.parsers.rst import directives
 from docutils.statemachine import ViewList
+from inmanta.config import Config
 from sphinx import addnodes
 from sphinx.directives import ObjectDescription
-from sphinx.domains import Domain
-from sphinx.domains import ObjType
+from sphinx.domains import Domain, ObjType
 from sphinx.roles import XRefRole
-from sphinx.util.nodes import make_refnode
-from sphinx.util.nodes import nested_parse_with_titles
 from sphinx.util import logging
-
-from inmanta.config import Config
+from sphinx.util.nodes import make_refnode, nested_parse_with_titles
 
 LOGGER = logging.getLogger(__name__)
 
 
 def _indent(text, n=2):
     padding = " " * n
-    return "\n".join(padding + l for l in text.splitlines())
+    return "\n".join(padding + line for line in text.splitlines())
 
 
 def _make_anchor_target(group_name, option_name):
@@ -253,8 +250,8 @@ class ShowOptionsDirective(rst.Directive):
             try:
                 importlib.import_module(namespace)
             except ModuleNotFoundError:
-                # The documentation lists all possible Python modules in the server codebase with config. Only the ones that exist will be
-                # rendered. This allows a single file for both OSS and ISO releases.
+                # The documentation lists all possible Python modules in the server codebase with config.
+                # Only the ones that exist will be rendered. This allows a single file for both OSS and ISO releases.
                 LOGGER.warning(
                     "Unable to load module %s, no config will be loaded for this module",
                     namespace,
