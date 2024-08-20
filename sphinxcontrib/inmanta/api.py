@@ -267,7 +267,18 @@ pip:
         lines.append(" * Agent name ``%s``" % opt["agent"])
 
         handlers = []
-        for cls in handler.Commander.get_handlers()[name].values():
+
+        def get_handler(name:str) -> Sequence[type[ResourceHandler]]:
+            # ISO8 and per ISO8 compatiblity
+            handlers = handler.Commander.get_handlers()[name]
+            # signature was def get_handlers(cls) -> dict[str, dict[str, type[ResourceHandler[Any]]]]:
+            if isinstance(handlers, dict):
+                return handlers.values()
+            else:
+                # Signature is def get_handlers(cls) -> dict[str, type[ResourceHandler[Any]]]:
+                return [handlers]
+
+        for cls in get_handler(name):
             mod = cls.__module__[len("inmanta_plugins.") :]
             handlers.append(":py:class:`%s.%s`" % (mod, cls.__name__))
         lines.append(" * Handlers " + ", ".join(handlers))
