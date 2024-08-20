@@ -216,7 +216,7 @@ pip:
                             yield (entity, cls)
                     else:
                         # Signature is def get_handlers(cls) -> dict[str, type[ResourceHandler[Any]]]:
-                        yield (entity, cls)
+                        yield (entity, handlers)
 
             h = []
             for entity, cls in get_handlers():
