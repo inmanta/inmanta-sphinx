@@ -16,10 +16,6 @@
     Contact: code@inmanta.com
 """
 
-import typing
-from collections import defaultdict, OrderedDict
-from typing import Optional, Union, Tuple, Iterator
-from collections.abc import Sequence, Callable, Mapping
 import os
 import re
 import shutil
@@ -28,7 +24,7 @@ import tempfile
 import typing
 from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Mapping, Sequence
-from typing import Optional, Union
+from typing import Iterator, Optional, Tuple, Union
 
 import click
 
@@ -229,9 +225,7 @@ pip:
 
         return []
 
-    def emit_handler(
-        self, entity: str,  cls: typing.Type[ResourceHandler]
-    ) -> list[str]:
+    def emit_handler(self, entity: str, cls: typing.Type[ResourceHandler]) -> list[str]:
         """
         Generate documentation for a handler.
         :param entity: The entity this handler applies to.
@@ -269,7 +263,7 @@ pip:
 
         handlers = []
 
-        def get_handler(name:str) -> Sequence[type[ResourceHandler]]:
+        def get_handler(name: str) -> Sequence[type[ResourceHandler]]:
             # ISO8 and pre ISO8 compatiblity
             handlers = handler.Commander.get_handlers()[name]
             # signature was def get_handlers(cls) -> dict[str, dict[str, type[ResourceHandler[Any]]]]:
