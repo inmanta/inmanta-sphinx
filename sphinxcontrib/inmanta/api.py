@@ -18,7 +18,7 @@
 
 import typing
 from collections import defaultdict, OrderedDict
-from typing import Optional, Union
+from typing import Optional, Union, Tuple, Iterator
 from collections.abc import Sequence, Callable, Mapping
 import os
 import re
@@ -207,11 +207,21 @@ pip:
                 for res, (cls, opt) in res_list:
                     lines.extend(self.emit_resource(res, cls, opt))
 
+            def get_handlers() -> Iterator[Tuple[str, type[ResourceHandler]]]:
+                # ISO8 and pre ISO8 compatiblity
+                for entity, handlers in handler.Commander.get_handlers().items():
+                    # signature was def get_handlers(cls) -> dict[str, dict[str, type[ResourceHandler[Any]]]]:
+                    if isinstance(handlers, dict):
+                        for handler_name, cls in handlers.items():
+                            yield (entity, cls)
+                    else:
+                        # Signature is def get_handlers(cls) -> dict[str, type[ResourceHandler[Any]]]:
+                        yield (entity, handlers)
+
             h = []
-            for entity, handlers in handler.Commander.get_handlers().items():
-                for handler_name, cls in handlers.items():
-                    if cls.__module__.startswith("inmanta_plugins." + name):
-                        h.extend(self.emit_handler(entity, handler_name, cls))
+            for entity, cls in get_handlers():
+                if cls.__module__.startswith("inmanta_plugins." + name):
+                    h.extend(self.emit_handler(entity, cls))
 
             if len(h) > 0:
                 lines.extend(self.emit_heading("Handlers", "-"))
@@ -225,12 +235,11 @@ pip:
         return []
 
     def emit_handler(
-        self, entity: str, name: str, cls: typing.Type[ResourceHandler]
+        self, entity: str,  cls: typing.Type[ResourceHandler]
     ) -> list[str]:
         """
         Generate documentation for a handler.
         :param entity: The entity this handler applies to.
-        :param name: The name of the handler being documented.
         :param cls: The type of the handler.
 
         :return: The documented handler as a list of str
@@ -241,7 +250,6 @@ pip:
             lines.extend(self.prep_docstring(cls.__doc__, 1))
             lines.append("")
 
-        lines.append(" * Handler name ``%s``" % name)
         lines.append(" * Handler for entity :inmanta:Entity:`%s`" % entity)
         lines.append("")
         return lines
@@ -267,7 +275,18 @@ pip:
         lines.append(" * Agent name ``%s``" % opt["agent"])
 
         handlers = []
-        for cls in handler.Commander.get_handlers()[name].values():
+
+        def get_handler(name:str) -> Sequence[type[ResourceHandler]]:
+            # ISO8 and pre ISO8 compatiblity
+            handlers = handler.Commander.get_handlers()[name]
+            # signature was def get_handlers(cls) -> dict[str, dict[str, type[ResourceHandler[Any]]]]:
+            if isinstance(handlers, dict):
+                return handlers.values()
+            else:
+                # Signature is def get_handlers(cls) -> dict[str, type[ResourceHandler[Any]]]:
+                return [handlers]
+
+        for cls in get_handler(name):
             mod = cls.__module__[len("inmanta_plugins.") :]
             handlers.append(":py:class:`%s.%s`" % (mod, cls.__name__))
         lines.append(" * Handlers " + ", ".join(handlers))

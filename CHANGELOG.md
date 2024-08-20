@@ -1,5 +1,6 @@
 # v 2.1.0 (?)
 Changes in this release:
+- Make compatible with iso8
 
 # v 2.0.0 (2024-08-05)
 Changes in this release:
