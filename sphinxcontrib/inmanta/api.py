@@ -16,34 +16,31 @@
     Contact: code@inmanta.com
 """
 
-import typing
-from collections import defaultdict, OrderedDict
-from typing import Optional, Union, Tuple, Iterator
-from collections.abc import Sequence, Callable, Mapping
 import os
 import re
 import shutil
 import sys
 import tempfile
+import typing
+from collections import OrderedDict, defaultdict
+from collections.abc import Callable, Mapping, Sequence
+from typing import Iterator, Optional, Tuple, Union
 
 import click
-import toml
 
-from inmanta import module, compiler, ast
+import toml
+from inmanta import ast, compiler, module
 from inmanta.agent import handler
+from inmanta.agent.handler import ResourceHandler
 from inmanta.ast.attribute import RelationAttribute
 from inmanta.module import Project
-from inmanta.plugins import PluginMeta, Plugin
-from inmanta.resources import resource, Resource
-from inmanta.agent.handler import ResourceHandler
+from inmanta.plugins import Plugin, PluginMeta
+from inmanta.resources import Resource, resource
 from sphinx.util import docstrings
 
-
-ATTRIBUTE_REGEX = re.compile(
-    "(?::param|:attribute|:attr) (.*?)(?:(?=:param)|(?=:attribute)|(?=:attr)|\Z)", re.S
-)
-ATTRIBUTE_LINE_REGEX = re.compile("([^\s:]+)(:)?\s(.*?)\Z")
-PARAM_REGEX = re.compile(":param|:attribute|:attr")
+ATTRIBUTE_REGEX = re.compile(r"(?::param|:attribute|:attr) (.*?)(?:(?=:param)|(?=:attribute)|(?=:attr)|\Z)", re.S)
+ATTRIBUTE_LINE_REGEX = re.compile(r"([^\s:]+)(:)?\s(.*?)\Z")
+PARAM_REGEX = re.compile(r":param|:attribute|:attr")
 AUTODOC_FILE = "autodoc.rst"
 
 
@@ -81,7 +78,7 @@ def parse_docstring(docstring: str) -> dict[str, Union[dict[str, str], list[str]
         # process params
         attr_lines = ATTRIBUTE_REGEX.findall(docstring)
         for line in attr_lines:
-            line = re.sub("\s+", " ", line.strip())
+            line = re.sub(r"\s+", " ", line.strip())
             match = ATTRIBUTE_LINE_REGEX.search(line)
             if match is None:
                 print("Comment empty: " + line, file=sys.stderr)
@@ -99,9 +96,7 @@ def parse_docstring(docstring: str) -> dict[str, Union[dict[str, str], list[str]
 
 
 class DocModule(object):
-    def doc_compile(
-        self, module_dir: Optional[str], name: str, import_list: Sequence[str]
-    ) -> list[str]:
+    def doc_compile(self, module_dir: Optional[str], name: str, import_list: Sequence[str]) -> list[str]:
         """
         Compile the documentation for a module and generate the API documentation,
         organized in sections e.g. Entities, Implementations, Resources, Handlers...
@@ -153,9 +148,9 @@ pip:
             lines = []
 
             types = defaultdict(OrderedDict)
-            for module in sorted(modules.keys()):
-                for type_name in sorted(modules[module].keys()):
-                    type_obj = modules[module][type_name]
+            for module_name in sorted(modules.keys()):
+                for type_name in sorted(modules[module_name].keys()):
+                    type_obj = modules[module_name][type_name]
                     if isinstance(type_obj, ast.entity.Entity):
                         full_name = type_obj.get_full_name()
                         types["entity"][full_name] = type_obj
@@ -195,11 +190,7 @@ pip:
                     lines.extend(self.emit_plugin(plugin))
 
             res_list = sorted(
-                [
-                    res
-                    for res in resource._resources.items()
-                    if res[0][: len(name)] == name
-                ],
+                [res for res in resource._resources.items() if res[0][: len(name)] == name],
                 key=lambda x: x[0],
             )
             if len(res_list) > 0:
@@ -234,9 +225,7 @@ pip:
 
         return []
 
-    def emit_handler(
-        self, entity: str,  cls: typing.Type[ResourceHandler]
-    ) -> list[str]:
+    def emit_handler(self, entity: str, cls: typing.Type[ResourceHandler]) -> list[str]:
         """
         Generate documentation for a handler.
         :param entity: The entity this handler applies to.
@@ -254,9 +243,7 @@ pip:
         lines.append("")
         return lines
 
-    def emit_resource(
-        self, name: str, cls: Resource, opt: Mapping[str, str]
-    ) -> list[str]:
+    def emit_resource(self, name: str, cls: Resource, opt: Mapping[str, str]) -> list[str]:
         """
         Generate documentation for a resource.
         :param name: The name of the resource being documented.
@@ -276,7 +263,7 @@ pip:
 
         handlers = []
 
-        def get_handler(name:str) -> Sequence[type[ResourceHandler]]:
+        def get_handler(name: str) -> Sequence[type[ResourceHandler]]:
             # ISO8 and pre ISO8 compatiblity
             handlers = handler.Commander.get_handlers()[name]
             # signature was def get_handlers(cls) -> dict[str, dict[str, type[ResourceHandler[Any]]]]:
@@ -304,12 +291,7 @@ pip:
             "",
         ]
         if instance.__class__.__function__.__doc__ is not None:
-            docstring = [
-                "   " + x
-                for x in docstrings.prepare_docstring(
-                    instance.__class__.__function__.__doc__
-                )
-            ]
+            docstring = ["   " + x for x in docstrings.prepare_docstring(instance.__class__.__function__.__doc__)]
             lines.extend(docstring)
             lines.append("")
         return lines
@@ -321,22 +303,16 @@ pip:
         return [heading, char * len(heading), ""]
 
     def prep_docstring(self, docstr, indent_level=0):
-        return [
-            ("   " * indent_level) + x for x in docstrings.prepare_docstring(docstr)
-        ]
+        return [("   " * indent_level) + x for x in docstrings.prepare_docstring(docstr)]
 
-    def emit_attributes(
-        self, entity: ast.entity.Entity, attributes: Mapping[str, str]
-    ) -> list[str]:
+    def emit_attributes(self, entity: ast.entity.Entity, attributes: Mapping[str, str]) -> list[str]:
         """
         Generate documentation for the attributes of an entity.
         :param entity: The entity whose attributes are being documented.
         :param attributes: Maps attributes names to their documentation.
         :return: The documented attributes as a list of str
         """
-        all_attributes = [
-            entity.get_attribute(name) for name in list(entity._attributes.keys())
-        ]
+        all_attributes = [entity.get_attribute(name) for name in list(entity._attributes.keys())]
         relations = [x for x in all_attributes if isinstance(x, RelationAttribute)]
         others = [x for x in all_attributes if not isinstance(x, RelationAttribute)]
 
@@ -373,42 +349,26 @@ pip:
 
             lines.append("")
             if attr.end is not None:
-                otherend = (
-                    attr.end.get_entity().get_full_name() + "." + attr.end.get_name()
-                )
+                otherend = attr.end.get_entity().get_full_name() + "." + attr.end.get_name()
                 lines.append(
-                    "      other end: :inmanta:relation:`{0} [{1}]<{0}>`".format(
-                        otherend, format_multiplicity(attr.end)
-                    )
+                    "      other end: :inmanta:relation:`{0} [{1}]<{0}>`".format(otherend, format_multiplicity(attr.end))
                 )
                 lines.append("")
 
         if len(entity.implementations) > 0:
-            lines.append(
-                "   The following implementations are defined for this entity:"
-            )
+            lines.append("   The following implementations are defined for this entity:")
             lines.append("")
             for impl in entity.implementations:
-                lines.append(
-                    "      * :inmanta:implementation:`%s`" % impl.get_full_name()
-                )
+                lines.append("      * :inmanta:implementation:`%s`" % impl.get_full_name())
 
             lines.append("")
 
         if len(entity.implements) > 0:
-            lines.append(
-                "   The following implements statements select implementations for this entity:"
-            )
+            lines.append("   The following implements statements select implementations for this entity:")
             lines.append("")
             for impl in entity.implements:
                 lines.append(
-                    "      * "
-                    + ", ".join(
-                        [
-                            ":inmanta:implementation:`%s`" % x.get_full_name()
-                            for x in impl.implementations
-                        ]
-                    )
+                    "      * " + ", ".join([":inmanta:implementation:`%s`" % x.get_full_name() for x in impl.implementations])
                 )
 
                 constraint_str = impl.constraint.pretty_print()
@@ -427,11 +387,7 @@ pip:
         :return: The generated implementation documentation as a list of str.
         """
         lines = []
-        lines.append(
-            ".. inmanta:implementation:: {0}::{1}".format(
-                impl.namespace.get_full_name(), impl.name
-            )
-        )
+        lines.append(".. inmanta:implementation:: {0}::{1}".format(impl.namespace.get_full_name(), impl.name))
         if impl.comment is not None:
             lines.append("")
             lines.extend(self.prep_docstring(impl.comment, 2))
@@ -452,13 +408,7 @@ pip:
 
         if len(entity.parent_entities) > 0:
             lines.append(
-                "   Parents: %s"
-                % ", ".join(
-                    [
-                        ":inmanta:entity:`%s`" % x.get_full_name()
-                        for x in entity.parent_entities
-                    ]
-                )
+                "   Parents: %s" % ", ".join([":inmanta:entity:`%s`" % x.get_full_name() for x in entity.parent_entities])
             )
         lines.append("")
 
@@ -485,9 +435,7 @@ pip:
         lines.append(".. inmanta:typedef:: {0}".format(typedef.type_string()))
         lines.append("")
         lines.append("   * Base type ``{0}``".format(typedef.basetype.type_string()))
-        lines.append(
-            "   * Type constraint ``{0}``".format(typedef.expression.pretty_print())
-        )
+        lines.append("   * Type constraint ``{0}``".format(typedef.expression.pretty_print()))
         lines.append("")
         return lines
 
@@ -507,26 +455,18 @@ pip:
         lines.append(" * License: " + module.metadata.license)
         lines.append(" * Version: " + str(module.version))
 
-        if (
-            hasattr(module.metadata, "compiler_version")
-            and module.metadata.compiler_version is not None
-        ):
-            lines.append(
-                " * This module requires compiler version %s or higher"
-                % module.metadata.compiler_version
-            )
+        if hasattr(module.metadata, "compiler_version") and module.metadata.compiler_version is not None:
+            lines.append(" * This module requires compiler version %s or higher" % module.metadata.compiler_version)
 
         lines.append("")
         return lines
 
-    def _get_modules(
-        self, module_source_dir: Optional[str], module_name: str
-    ) -> Optional[tuple[module.Module, list[str]]]:
+    def _get_modules(self, module_source_dir: Optional[str], module_name: str) -> Optional[tuple[module.Module, list[str]]]:
         """
         Given a module name, returns the module object and a list of all submodule names.
 
-        :param module_source_dir: Absolute path to the directory where all v1 modules are stored. Must not be None if module is a v1
-            module.
+        :param module_source_dir: Absolute path to the directory where all v1 modules are stored.
+            Must not be None if module is a v1 module.
         :param module_name: The name of the module to fetch.
         """
 
@@ -536,11 +476,7 @@ pip:
             """
             if hasattr(module, "ModuleV2"):
                 local_v2_source: module.ModuleV2Source = module.ModuleV2Source(urls=[])
-                v2_mod: Optional[module.ModuleV2] = (
-                    local_v2_source.get_installed_module(
-                        project=None, module_name=module_name
-                    )
-                )
+                v2_mod: Optional[module.ModuleV2] = local_v2_source.get_installed_module(project=None, module_name=module_name)
                 if v2_mod is not None:
                     return v2_mod
                 elif module_source_dir is None:
@@ -549,19 +485,13 @@ pip:
                         " where v1 modules are located."
                     )
                 else:
-                    return module.Module.from_path(
-                        os.path.join(module_source_dir, module_name)
-                    )
+                    return module.Module.from_path(os.path.join(module_source_dir, module_name))
             else:
                 # legacy mode
                 if module_source_dir is None:
-                    raise ValueError(
-                        "Please pass the directory where all modules modules are located."
-                    )
+                    raise ValueError("Please pass the directory where all modules modules are located.")
                 try:
-                    return module.Module(
-                        None, os.path.join(module_source_dir, module_name)
-                    )
+                    return module.Module(None, os.path.join(module_source_dir, module_name))
                 except (module.InvalidModuleException, module.InvalidMetadata):
                     return None
 
@@ -588,12 +518,7 @@ pip:
             return lambda x: True
 
         pyproject_dict = toml.load(pyproject)
-        filters = (
-            pyproject_dict.get("tool", {})
-            .get("inmanta-sphinx", {})
-            .get("docgen", {})
-            .get("module_filter", [])
-        )
+        filters = pyproject_dict.get("tool", {}).get("inmanta-sphinx", {}).get("docgen", {}).get("module_filter", [])
         if isinstance(filters, str):
             filters = [filters]
 
@@ -609,9 +534,7 @@ pip:
 
         return filter_func
 
-    def run(
-        self, module_source_dir: str, module_name: str, extra_modules: Sequence[str]
-    ) -> str:
+    def run(self, module_source_dir: str, module_name: str, extra_modules: Sequence[str]) -> str:
         """
         Run the module doc generation.
 
@@ -621,25 +544,15 @@ pip:
 
         :returns: The documentation for this module as a string.
         """
-        mod_data: Optional[tuple[module.Module, list[str]]] = self._get_modules(
-            module_source_dir, module_name
-        )
+        mod_data: Optional[tuple[module.Module, list[str]]] = self._get_modules(module_source_dir, module_name)
         if mod_data is None:
-            raise Exception(
-                f"Could not find module {module_name} in {module_source_dir}."
-            )
+            raise Exception(f"Could not find module {module_name} in {module_source_dir}.")
         mod, submodules = mod_data
 
-        module_filter = self.get_module_filter(
-            None
-            if not module_source_dir
-            else os.path.join(module_source_dir, module_name)
-        )
+        module_filter = self.get_module_filter(None if not module_source_dir else os.path.join(module_source_dir, module_name))
 
         for name in extra_modules:
-            extra_mod_data: Optional[tuple[module.Module, list[str]]] = (
-                self._get_modules(module_source_dir, name)
-            )
+            extra_mod_data: Optional[tuple[module.Module, list[str]]] = self._get_modules(module_source_dir, name)
             if extra_mod_data is not None:
                 submodules.extend(extra_mod_data[1])
 
@@ -655,13 +568,9 @@ pip:
 @click.command()
 @click.option(
     "--module-sources",
-    help=(
-        "The path to the local directory where all module sources (v1 or v2) are stored."
-    ),
+    help=("The path to the local directory where all module sources (v1 or v2) are stored."),
 )
-@click.option(
-    "--module-name", help="The module to generate api docs for", required=True
-)
+@click.option("--module-name", help="The module to generate api docs for", required=True)
 @click.option(
     "--extra-modules",
     "-m",
@@ -677,9 +586,11 @@ pip:
 @click.option(
     "--autodoc-only",
     "-a",
-    is_flag=True, show_default=True, default=False,
+    is_flag=True,
+    show_default=True,
+    default=False,
     help="Ignore the README.md file when building documentation for this module "
-         "and generate documentation under <out_dir>/<module_name>.rst.",
+    "and generate documentation under <out_dir>/<module_name>.rst.",
     required=True,
 )
 def generate_module_doc(
@@ -742,9 +653,7 @@ def generate_module_doc(
                     extra_modules=extra_modules,
                     module_name=module_name,
                     module_source_dir=module_sources,
-                    out_file=os.path.join(
-                        os.path.abspath(module_doc_dir), AUTODOC_FILE
-                    ),
+                    out_file=os.path.join(os.path.abspath(module_doc_dir), AUTODOC_FILE),
                 )
                 break
 
@@ -762,12 +671,8 @@ def build_module_doc_directory(out_dir: str, module_dir, module_name: str) -> st
     module_doc_dir = os.path.abspath(os.path.join(out_dir, module_name))
     os.makedirs(module_doc_dir)
     src_to_dest_map = {
-        os.path.join(module_dir, "README.md"): os.path.join(
-            module_doc_dir, "README.md"
-        ),
-        os.path.join(module_dir, "CHANGELOG.md"): os.path.join(
-            module_doc_dir, "CHANGELOG.md"
-        ),
+        os.path.join(module_dir, "README.md"): os.path.join(module_doc_dir, "README.md"),
+        os.path.join(module_dir, "CHANGELOG.md"): os.path.join(module_doc_dir, "CHANGELOG.md"),
         os.path.join(module_dir, "docs"): os.path.join(module_doc_dir, "docs"),
     }
     for src, dest in src_to_dest_map.items():

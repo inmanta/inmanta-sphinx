@@ -24,27 +24,23 @@ from typing import List
 
 from docutils import nodes
 from docutils.parsers import rst
-from docutils.parsers.rst import directives
 from docutils.statemachine import ViewList
-from sphinx import addnodes
-from sphinx.directives import ObjectDescription
-from sphinx.domains import Domain
-from sphinx.domains import ObjType
-from sphinx.roles import XRefRole
-from sphinx.util.nodes import make_refnode
-from sphinx.util.nodes import nested_parse_with_titles
-from sphinx.util import logging
-
+from inmanta import data
 from inmanta.server.bootloader import InmantaBootloader
 from inmanta.server.extensions import ApplicationContext
-from inmanta import data
+from sphinx import addnodes
+from sphinx.directives import ObjectDescription
+from sphinx.domains import Domain, ObjType
+from sphinx.roles import XRefRole
+from sphinx.util import logging
+from sphinx.util.nodes import make_refnode, nested_parse_with_titles
 
 LOGGER = logging.getLogger(__name__)
 
 
 def _indent(text, n=2):
     padding = " " * n
-    return "\n".join(padding + l for l in text.splitlines())
+    return "\n".join(padding + line for line in text.splitlines())
 
 
 def _make_anchor_target(group_name, option_name):
@@ -66,7 +62,6 @@ class ConfigOptXRefRole(XRefRole):
         if "." in target:
             group, opt_name = target.split(".")
         else:
-            group = "DEFAULT"
             opt_name = target
         anchor = opt_name.lower()
         return title, anchor
@@ -104,9 +99,7 @@ def _format_setting_help():
     settings: List[data.Setting]
     if hasattr(ApplicationContext, "get_environment_settings"):
         bootloader = InmantaBootloader()
-        ctx: ApplicationContext = bootloader.load_slices(
-            load_all_extensions=True, only_register_environment_settings=True
-        )
+        ctx: ApplicationContext = bootloader.load_slices(load_all_extensions=True, only_register_environment_settings=True)
         settings = ctx.get_environment_settings()
     else:
         # Fallback for older version of inmanta-core that don't have support to collect environment settings via the bootloader.
@@ -120,11 +113,7 @@ def _format_setting_help():
         else:
             yield _indent(f":Type: {setting.typ}: {', '.join(setting.allowed_values)}")
 
-        default_value = (
-            "''"
-            if isinstance(setting.default, str) and not setting.default
-            else setting.default
-        )
+        default_value = "''" if isinstance(setting.default, str) and not setting.default else setting.default
         yield _indent(f":Default: {default_value}")
         yield ""
         yield _indent(setting.doc)
