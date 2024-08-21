@@ -1,4 +1,4 @@
-# v 2.1.0 (?)
+# v 2.1.0 (2024-08-21)
 Changes in this release:
 - Make compatible with iso8
 
