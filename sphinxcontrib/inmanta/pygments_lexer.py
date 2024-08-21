@@ -105,7 +105,7 @@ class InmantaLexer(RegexLexer):
                 ),
             ),
             (in_class_name, Name.Class),
-            (r'["]{3}([\\n]|.)*?["]{3}', Comment.Multiline),  # t_begin_mls
+            (r'["]{3}([\n]|.)*?["]{3}', Comment.Multiline),  # t_begin_mls
             ("\n+", Whitespace),  # t_ANY_newline
             (r"!=|==|>=|<=|<|>", Token.Operator),  # t_CMP_OP
             (r"[:[\]()=,.{}\?*]|(\+=)", Token.Operator),  # literals
