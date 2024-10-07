@@ -265,7 +265,7 @@ pip:
 
         def get_handler(name: str) -> Sequence[type[ResourceHandler]]:
             # ISO8 and pre ISO8 compatiblity
-            handlers = handler.Commander.get_handlers()[name]
+            handlers = handler.Commander.get_handlers().get(name, {})
             # signature was def get_handlers(cls) -> dict[str, dict[str, type[ResourceHandler[Any]]]]:
             if isinstance(handlers, dict):
                 return handlers.values()
