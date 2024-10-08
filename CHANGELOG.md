@@ -1,3 +1,7 @@
+# v 2.1.1 (?)
+Changes in this release:
+- Make the doc generation compatible with iso8
+
 # v 2.1.0 (2024-08-21)
 Changes in this release:
 - Make compatible with iso8
