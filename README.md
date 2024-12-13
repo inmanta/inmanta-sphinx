@@ -22,7 +22,7 @@ It adds the show-options directive and a number of config objects to sphinx. Wit
 ```
 
 The namespace-files option contains a comma-separated list of files. These files contain a list of namespaces. The * operator
- can be used to match on certain files in a directory. An example of such a file is show below:
+ can be used to match on certain files in a directory. An example of such a file is shown below:
 
 ```
 inmanta.deploy
@@ -34,7 +34,7 @@ inmanta.compiler.config
 ## sphinxcontrib.inmanta.dsl
 
 
-This exention adds objects and directives to add documentation for Inmanta dsl objects such as
+This extension adds objects and directives to add documentation for Inmanta dsl objects such as
 entities, relations, ...
 
 

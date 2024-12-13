@@ -69,6 +69,11 @@ def _format_group(group_name, opt_list):
             default = str(default).strip()
             yield _indent(":Default: %s" % default)
 
+        environment_variable = opt.get_environment_variable()
+        if environment_variable:
+            environment_variable = str(environment_variable).strip()
+            yield _indent(":Environment Variable: %s" % environment_variable)
+
         yield ""
 
         try:
