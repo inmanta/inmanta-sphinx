@@ -1,4 +1,4 @@
-# v 2.2.0 (?)
+# v 2.2.0 (2024-12-17)
 Changes in this release:
 - Generate the associated environment variable to each configuration option in the reference page.
 
