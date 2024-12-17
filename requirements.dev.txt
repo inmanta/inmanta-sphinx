@@ -1,0 +1,2 @@
+types-docutils
+inmanta-dev-dependencies

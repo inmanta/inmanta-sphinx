@@ -16,20 +16,9 @@
     Contact: code@inmanta.com
 """
 
-from pygments.lexer import RegexLexer, bygroups
-from pygments.token import (
-    Name,
-    Whitespace,
-    Operator,
-    Comment,
-    Token,
-    Keyword,
-    Number,
-    String,
-)
-
 from inmanta.parser.plyInmantaLex import keyworldlist
-
+from pygments.lexer import RegexLexer, bygroups
+from pygments.token import Comment, Keyword, Name, Number, Operator, String, Token, Whitespace
 
 primitives = ["bool", "string", "number", "list", "dict"]
 
@@ -42,17 +31,7 @@ multihalf_like = r"(\[[0-9: \t]+\][\t -]*)"
 
 dot = r"([.])"
 
-oldstyle = (
-    in_class_name
-    + whitespace
-    + ident
-    + whitespace
-    + multi_like
-    + whitespace
-    + in_class_name
-    + whitespace
-    + ident
-)
+oldstyle = in_class_name + whitespace + ident + whitespace + multi_like + whitespace + in_class_name + whitespace + ident
 
 
 class InmantaLexer(RegexLexer):
@@ -84,15 +63,7 @@ class InmantaLexer(RegexLexer):
             ),
             # old style relation Host mgr [0:] -- [1] odl::ODL odl
             (
-                in_class_name
-                + whitespace
-                + ident
-                + whitespace
-                + multi_like
-                + whitespace
-                + in_class_name
-                + whitespace
-                + ident,
+                in_class_name + whitespace + ident + whitespace + multi_like + whitespace + in_class_name + whitespace + ident,
                 bygroups(
                     Name.Class,
                     Whitespace,
@@ -107,15 +78,7 @@ class InmantaLexer(RegexLexer):
             ),
             # new style relation File.host [1] -- Host.files [0:]
             (
-                in_class_name
-                + dot
-                + ident
-                + whitespace
-                + multi_like
-                + whitespace
-                + in_class_name
-                + dot
-                + ident,
+                in_class_name + dot + ident + whitespace + multi_like + whitespace + in_class_name + dot + ident,
                 bygroups(
                     Name.Class,
                     Operator,
@@ -130,13 +93,7 @@ class InmantaLexer(RegexLexer):
             ),
             # new style relation File.host [1] -- Host
             (
-                in_class_name
-                + dot
-                + ident
-                + whitespace
-                + multihalf_like
-                + whitespace
-                + in_class_name,
+                in_class_name + dot + ident + whitespace + multihalf_like + whitespace + in_class_name,
                 bygroups(
                     Name.Class,
                     Operator,
@@ -148,21 +105,21 @@ class InmantaLexer(RegexLexer):
                 ),
             ),
             (in_class_name, Name.Class),
-            ('["]{3}([\\n]|.)*?["]{3}', Comment.Multiline),  # t_begin_mls
+            (r'["]{3}([\n]|.)*?["]{3}', Comment.Multiline),  # t_begin_mls
             ("\n+", Whitespace),  # t_ANY_newline
-            ("!=|==|>=|<=|<|>", Token.Operator),  # t_CMP_OP
-            ("[:[\]()=,.{}\?*]|(\+=)", Token.Operator),  # literals
-            ("\#.*?\n", Comment.Single),  # t_COMMENT
+            (r"!=|==|>=|<=|<|>", Token.Operator),  # t_CMP_OP
+            (r"[:[\]()=,.{}\?*]|(\+=)", Token.Operator),  # literals
+            ("\\#.*?\n", Comment.Single),  # t_COMMENT
             ("[-]?[0-9]*[.][0-9]+", Number.Float),  # t_FLOAT
             ("[a-zA-Z_][a-zA-Z_0-9-]*", process_id),  # t_ID
             ("[-]?[0-9]+", Number.Integer),  # t_INT
-            ("\//.*?\n", Comment.Single),  # t_JCOMMENT
+            ("\\//.*?\n", Comment.Single),  # t_JCOMMENT
             ("--|->|<-", Token.Operator),  # t_REL
             ("[:]{2}", Name),  # t_SEP
             (r"\".*?[^\\]\"|\'.*?[^\\]\'", String),  # t_STRING
             ("\"\"|''", String),  # t_STRING_EMPTY
-            ("\*\*", Token.Operator),  # t_DOUBLE_STAR
-            ("\+|-|\*|/|%", Token.Operator),  # Arithmetic operator
+            (r"\*\*", Token.Operator),  # t_DOUBLE_STAR
+            (r"\+|-|\*|/|%", Token.Operator),  # Arithmetic operator
             ("[ \t]+", Whitespace),  # t_ignore
         ],
         "entity-extend": [

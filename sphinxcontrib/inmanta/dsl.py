@@ -18,8 +18,7 @@
 
 from sphinx import addnodes
 from sphinx.directives import ObjectDescription
-from sphinx.domains import Domain
-from sphinx.domains import ObjType
+from sphinx.domains import Domain, ObjType
 from sphinx.locale import _
 from sphinx.roles import XRefRole
 from sphinx.util.nodes import make_refnode
@@ -62,9 +61,7 @@ class InmantaObject(ObjectDescription):
             objects[key] = self.env.docname
         indextext = self.get_index_text(self.objtype, name)
         if indextext:
-            self.indexnode["entries"].append(
-                ("single", indextext, targetname, "", None)
-            )
+            self.indexnode["entries"].append(("single", indextext, targetname, "", None))
 
     def get_index_text(self, objectname, name):
         return name
