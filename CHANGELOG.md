@@ -1,3 +1,6 @@
+# v 2.4.0 (?)
+Changes in this release:
+
 # v 2.3.0 (2024-12-19)
 Changes in this release:
 - Improve the overview of all handlers in the documentation. All entities sharing the same handler class are grouped together.
