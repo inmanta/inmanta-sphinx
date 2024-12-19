@@ -1,3 +1,7 @@
+# v 2.3.0 (2024-12-19)
+Changes in this release:
+- Improve the overview of all handlers in the documentation. All entities sharing the same handler class are grouped together.
+
 # v 2.2.0 (2024-12-17)
 Changes in this release:
 - Generate the associated environment variable to each configuration option in the reference page.

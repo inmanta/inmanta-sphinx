@@ -209,14 +209,17 @@ pip:
                         # Signature is def get_handlers(cls) -> dict[str, type[ResourceHandler[Any]]]:
                         yield (entity, handlers)
 
-            h = []
+            # Group entities by handler
+            handler_class_to_entities: dict[type[ResourceHandler], set[str]] = defaultdict(set)
             for entity, cls in get_handlers():
                 if cls.__module__.startswith("inmanta_plugins." + name):
-                    h.extend(self.emit_handler(entity, cls))
+                    handler_class_to_entities[cls].add(entity)
 
-            if len(h) > 0:
+            # Generate Handlers section
+            if len(handler_class_to_entities) > 0:
                 lines.extend(self.emit_heading("Handlers", "-"))
-                lines.extend(h)
+                for cls, entities in handler_class_to_entities.items():
+                    lines.extend(self.emit_handler(cls, entities))
 
             return lines
         finally:
@@ -225,11 +228,11 @@ pip:
 
         return []
 
-    def emit_handler(self, entity: str, cls: typing.Type[ResourceHandler]) -> list[str]:
+    def emit_handler(self, cls: typing.Type[ResourceHandler], entities: set[str]) -> list[str]:
         """
         Generate documentation for a handler.
-        :param entity: The entity this handler applies to.
         :param cls: The type of the handler.
+        :param entities: The set of entities relying on this handler.
 
         :return: The documented handler as a list of str
         """
@@ -239,7 +242,8 @@ pip:
             lines.extend(self.prep_docstring(cls.__doc__, 1))
             lines.append("")
 
-        lines.append(" * Handler for entity :inmanta:Entity:`%s`" % entity)
+        for entity in sorted(entities):
+            lines.append(" * Handler for entity :inmanta:Entity:`%s`" % entity)
         lines.append("")
         return lines
 
