@@ -1,5 +1,6 @@
 # v 2.4.0 (?)
 Changes in this release:
+- Format code using black 25.1.0
 
 # v 2.3.0 (2024-12-19)
 Changes in this release:
