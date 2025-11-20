@@ -72,7 +72,7 @@ pipeline {
                 '''
               }
               sh '''
-                export PYTHON_BINARY=$(irt -v DEBUG get-python-version-for-checkout --map-file ${WORKSPACE}/branch-to-python-version.json --path ${WORKSPACE}/inmanta-core)
+                export PYTHON_BINARY=$(irt -v DEBUG get-python-version-for-checkout --map-file ${WORKSPACE}/branch-to-python-version.json --path ${WORKSPACE}/inmanta-core) --branch ${CORE_BRANCH}
                 echo "Tests will be run with ${PYTHON_BINARY}"
                 rm -rf $INMANTA_TEST_ENV
                 ${PYTHON_BINARY} -m venv $INMANTA_TEST_ENV
