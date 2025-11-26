@@ -1,3 +1,37 @@
+def get_v1_module_branch(core_branch) {
+    if (core_branch ==~ /master|iso8/) {
+        return '*/master'
+    }
+    if (core_branch ==~ /iso7/) {
+        return '*/iso7'
+    }
+    return "invalid_branch"
+}
+
+def get_compatible_std_version(core_branch) {
+    println "get_compatible_std_version core_branch: " + core_branch
+    def iso_version
+    def match
+    if (core_branch ==~ /master/) {
+        iso_version = "latest"
+    }
+    else {
+         try {
+            // do not store Matcher object in variable!
+            // see https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/#avoiding-notserializableexception
+            iso_version = (core_branch =~ /^iso(\d+)$/)[0][1]
+        } catch (IndexOutOfBoundsException) {
+            iso_version = "invalid_branch"
+        }
+    }
+    println "get_compatible_std_version iso_version: " + iso_version
+    def sh_script = """
+curl https://docs.inmanta.com/inmanta-service-orchestrator/${iso_version}/reference/compatibility.json | jq -r '.module_compatibility_ranges["inmanta-module-std"]'
+"""
+    sh(returnStdout: true, script: sh_script)
+}
+
+
 pipeline {
   agent any
   options {
@@ -92,9 +126,17 @@ pipeline {
               dir("std") {
                 deleteDir()
               }
-              checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
+              script {
+                  println "Core branch:" + env.CORE_BRANCH
+                  def v1_module_branch = get_v1_module_branch(env.CORE_BRANCH)
+                  println "v1_module_branch:" + v1_module_branch
+                  checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: v1_module_branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
+
+              }
 
               sh '''
+                # uninstall v2 so it doesn't take precedence over v1 automatically
+                $INMANTA_TEST_ENV/bin/python3 -m pip uninstall inmanta-module-std -y
                 $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
                 cd ${WORKSPACE}/inmanta-core/docs
                 $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
@@ -111,14 +153,22 @@ pipeline {
               dir("std") {
                 deleteDir()
               }
-              sh '$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre'
+              script{
+                println "Core branch:" + env.CORE_BRANCH
+                env.Std_Constraints = get_compatible_std_version(env.CORE_BRANCH)
+                println "std_constraints:" + env.Std_Constraints
 
-              sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
-                cd ${WORKSPACE}/inmanta-core/docs
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
-                cd ${WORKSPACE}
-              '''
+                def sh_script = '''
+                    $INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std${Std_Constraints} --pre
+                    $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
+                    cd ${WORKSPACE}/inmanta-core/docs
+                    $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
+                    cd ${WORKSPACE}
+                '''
+                sh(returnStdout: false, script: sh_script)
+              }
+
+
             }
           }
         }
