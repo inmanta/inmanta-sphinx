@@ -135,9 +135,7 @@ pipeline {
                 # uninstall v2 so it doesn't take precedence over v1 automatically
                 $INMANTA_TEST_ENV/bin/python3 -m pip uninstall inmanta-module-std -y
                 $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
-                cd ${WORKSPACE}/inmanta-core/docs
                 $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
-                cd ${WORKSPACE}
               '''
             }
           }
@@ -158,9 +156,7 @@ pipeline {
                 def sh_script = '''
                     $INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std${Std_Constraints} --pre
                     $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
-                    cd ${WORKSPACE}/inmanta-core/docs
                     $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
-                    cd ${WORKSPACE}
                 '''
                 sh(returnStdout: false, script: sh_script)
               }
