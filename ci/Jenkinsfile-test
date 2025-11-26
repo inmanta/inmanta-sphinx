@@ -1,6 +1,6 @@
 def get_std_v1_module_branch(core_branch) {
     // Hard codes which branch of the std module git repo to use when using
-    // it as a V1 module. (V1 modules are no longer used iso9 onwards)
+    // it as a V1 module. (V1 modules are no longer used iso8 onwards)
     if (core_branch ==~ /master|iso8/) {
         return '*/master'
     }
@@ -10,22 +10,21 @@ def get_std_v1_module_branch(core_branch) {
     throw new IllegalArgumentException("invalid_branch")
 }
 
-def get_compatible_std_version(core_branch) {
-    // Retrieve the constraints on the (V2) std module from the compatibility file
+def get_requirements_file_url(core_branch) {
+    // Retrieve the requirements file for the given core branch
     def iso_version
-    def match
+    def dev_version = ""
     if (core_branch ==~ /master/) {
         iso_version = "latest"
+        dev_version = "-dev"
     }
     else {
         // do not store Matcher object in variable!
         // see https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/#avoiding-notserializableexception
         iso_version = (core_branch =~ /^iso(\d+)$/)[0][1]
     }
-    def sh_script = """
-curl https://docs.inmanta.com/inmanta-service-orchestrator/${iso_version}/reference/compatibility.json | jq -r '.module_compatibility_ranges["inmanta-module-std"]'
-"""
-    sh(returnStdout: true, script: sh_script)
+    return "https://docs.inmanta.com/inmanta-service-orchestrator${dev_version}/${iso_version}/reference/requirements.txt"
+
 }
 
 
@@ -150,11 +149,13 @@ pipeline {
               }
               script{
                 println "Core branch: " + env.CORE_BRANCH
-                env.Std_Constraints = get_compatible_std_version(env.CORE_BRANCH)
-                println "std_constraints: " + env.Std_Constraints
+                env.REQUIREMENTS_FILE = get_requirements_file_url(env.CORE_BRANCH)
+                println "REQUIREMENTS_FILE: " + env.REQUIREMENTS_FILE
 
                 def sh_script = '''
-                    $INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std${Std_Constraints} --pre
+                    # Use the constraints on the (V2) std module from the requirements file for this iso version.
+
+                    $INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre -c ${REQUIREMENTS_FILE}
                     $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
                     $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
                 '''
