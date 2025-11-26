@@ -1,4 +1,6 @@
-def get_v1_module_branch(core_branch) {
+def get_std_v1_module_branch(core_branch) {
+    // Hard codes which branch of the std module git repo to use when using
+    // it as a V1 module. (V1 modules are no longer used iso9 onwards)
     if (core_branch ==~ /master|iso8/) {
         return '*/master'
     }
@@ -9,6 +11,7 @@ def get_v1_module_branch(core_branch) {
 }
 
 def get_compatible_std_version(core_branch) {
+    // Retrieve the constraints on the (V2) std module from the compatibility file
     println "get_compatible_std_version core_branch: " + core_branch
     def iso_version
     def match
@@ -127,10 +130,10 @@ pipeline {
                 deleteDir()
               }
               script {
-                  println "Core branch:" + env.CORE_BRANCH
-                  def v1_module_branch = get_v1_module_branch(env.CORE_BRANCH)
-                  println "v1_module_branch:" + v1_module_branch
-                  checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: v1_module_branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
+                  println "Core branch: " + env.CORE_BRANCH
+                  def std_v1_module_branch = get_std_v1_module_branch(env.CORE_BRANCH)
+                  println "std_v1_module_branch: " + std_v1_module_branch
+                  checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: std_v1_module_branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
 
               }
 
@@ -154,9 +157,9 @@ pipeline {
                 deleteDir()
               }
               script{
-                println "Core branch:" + env.CORE_BRANCH
+                println "Core branch: " + env.CORE_BRANCH
                 env.Std_Constraints = get_compatible_std_version(env.CORE_BRANCH)
-                println "std_constraints:" + env.Std_Constraints
+                println "std_constraints: " + env.Std_Constraints
 
                 def sh_script = '''
                     $INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std${Std_Constraints} --pre
