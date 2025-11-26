@@ -12,7 +12,6 @@ def get_std_v1_module_branch(core_branch) {
 
 def get_compatible_std_version(core_branch) {
     // Retrieve the constraints on the (V2) std module from the compatibility file
-    println "get_compatible_std_version core_branch: " + core_branch
     def iso_version
     def match
     if (core_branch ==~ /master/) {
@@ -27,7 +26,6 @@ def get_compatible_std_version(core_branch) {
             iso_version = "invalid_branch"
         }
     }
-    println "get_compatible_std_version iso_version: " + iso_version
     def sh_script = """
 curl https://docs.inmanta.com/inmanta-service-orchestrator/${iso_version}/reference/compatibility.json | jq -r '.module_compatibility_ranges["inmanta-module-std"]'
 """
