@@ -11,7 +11,7 @@ the embedded documentation to generate a config reference.
 It adds the show-options directive and a number of config objects to sphinx. Within the show-options directive, the
  namespaces should be specified that contain the Option() definitions. This can be done in two different ways. Either
  directly in the content of the show-options directive or indirectly via the namespace-files option. Both options don't
- have to be used simultaneously Use it like this to generate documentation:
+ have to be used simultaneously. Use it like this to generate documentation:
 
 ```
 .. show-options::
@@ -40,14 +40,15 @@ entities, relations, ...
 
 ## Inmanta doc gen
 
-To generate inmanta docs for a module, use the following
+To generate inmanta docs for a module, use the following:
 
 ```bash
 python -m sphinxcontrib.inmanta.api --module_repo folder_with_modules --module module_name  --file autodoc.rst
 ```
 
 To control what is added to the module, add the following to the `pyproject.toml` of the module
-The `module_filter` is a list of regexes, only submodules of which the name match one of the regexes are included
+The `module_filter` is a list of regexes, only submodules of which the name match one of the regexes are included:
+
 ```toml
 [tool.inmanta-sphinx.docgen]
 module_filter = ["^module_name"] # Only include main module, no submodules

@@ -1,3 +1,33 @@
+def get_std_v1_module_branch(core_branch) {
+    // Hard codes which branch of the std module git repo to use when using
+    // it as a V1 module. (V1 modules are no longer used iso8 onwards)
+    if (core_branch ==~ /master|iso8/) {
+        return '*/master'
+    }
+    if (core_branch ==~ /iso7/) {
+        return '*/iso7'
+    }
+    throw new IllegalArgumentException("invalid_branch")
+}
+
+def get_requirements_file_url(core_branch) {
+    // Retrieve the requirements file for the given core branch
+    def iso_version
+    def dev_version = ""
+    if (core_branch ==~ /master/) {
+        iso_version = "latest"
+        dev_version = "-dev"
+    }
+    else {
+        // do not store Matcher object in variable!
+        // see https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/#avoiding-notserializableexception
+        iso_version = (core_branch =~ /^iso(\d+)$/)[0][1]
+    }
+    return "https://docs.inmanta.com/inmanta-service-orchestrator${dev_version}/${iso_version}/reference/requirements.txt"
+
+}
+
+
 pipeline {
   agent any
   options {
@@ -92,11 +122,19 @@ pipeline {
               dir("std") {
                 deleteDir()
               }
-              checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
+              script {
+                  println "Core branch: " + env.CORE_BRANCH
+                  def std_v1_module_branch = get_std_v1_module_branch(env.CORE_BRANCH)
+                  println "std_v1_module_branch: " + std_v1_module_branch
+                  checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: std_v1_module_branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
+
+              }
 
               sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
+                # uninstall v2 so it doesn't take precedence over v1 automatically
+                $INMANTA_TEST_ENV/bin/python3 -m pip uninstall inmanta-module-std -y
+                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
+                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
               '''
             }
           }
@@ -109,12 +147,22 @@ pipeline {
               dir("std") {
                 deleteDir()
               }
-              sh '$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre'
+              script{
+                println "Core branch: " + env.CORE_BRANCH
+                env.REQUIREMENTS_FILE = get_requirements_file_url(env.CORE_BRANCH)
+                println "REQUIREMENTS_FILE: " + env.REQUIREMENTS_FILE
 
-              sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
-              '''
+                def sh_script = '''
+                    # Use the constraints on the (V2) std module from the requirements file for this iso version.
+
+                    $INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre -c ${REQUIREMENTS_FILE}
+                    $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
+                    $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
+                '''
+                sh(returnStdout: false, script: sh_script)
+              }
+
+
             }
           }
         }
