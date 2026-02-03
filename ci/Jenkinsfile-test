@@ -1,9 +1,6 @@
 def get_std_v1_module_branch(core_branch) {
     // Hard codes which branch of the std module git repo to use when using
     // it as a V1 module. (V1 modules are no longer used iso8 onwards)
-    if (core_branch ==~ /master|iso8/) {
-        return '*/master'
-    }
     if (core_branch ==~ /iso7/) {
         return '*/iso7'
     }
@@ -66,6 +63,18 @@ pipeline {
             name "MODULES_V2"
             values "true", "false"
           }
+        }
+        excludes {
+            exclude {
+                axis {
+                    name "CORE_BRANCH"
+                    values "master", "iso9", "iso8"
+                }
+                axis {
+                    name "MODULES_V2"
+                    values "false"
+                }
+            }
         }
         options {
           lock("inmanta-sphinx-sequential-matrix/${BRANCH_NAME}")
