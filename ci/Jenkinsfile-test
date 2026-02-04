@@ -68,7 +68,7 @@ pipeline {
             exclude {
                 axis {
                     name "CORE_BRANCH"
-                    values "master", "iso9", "iso8"
+                    notValues "iso7"
                 }
                 axis {
                     name "MODULES_V2"
