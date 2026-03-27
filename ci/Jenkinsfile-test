@@ -1,12 +1,3 @@
-def get_std_v1_module_branch(core_branch) {
-    // Hard codes which branch of the std module git repo to use when using
-    // it as a V1 module. (V1 modules are no longer used iso8 onwards)
-    if (core_branch ==~ /iso7/) {
-        return '*/iso7'
-    }
-    throw new IllegalArgumentException("invalid_branch")
-}
-
 def get_requirements_file_url(core_branch) {
     // Retrieve the requirements file for the given core branch
     def iso_version
@@ -57,24 +48,8 @@ pipeline {
         axes {
           axis {
             name "CORE_BRANCH"
-            values "master", "iso9", "iso8", "iso7"
+            values "master", "iso9", "iso8"
           }
-          axis {
-            name "MODULES_V2"
-            values "true", "false"
-          }
-        }
-        excludes {
-            exclude {
-                axis {
-                    name "CORE_BRANCH"
-                    notValues "iso7"
-                }
-                axis {
-                    name "MODULES_V2"
-                    values "false"
-                }
-            }
         }
         options {
           lock("inmanta-sphinx-sequential-matrix/${BRANCH_NAME}")
@@ -123,35 +98,7 @@ pipeline {
             }
           }
 
-          stage("test module v1") {
-            when {
-              environment name: "MODULES_V2", value: "false"
-            }
-            steps {
-              dir("std") {
-                deleteDir()
-              }
-              script {
-                  println "Core branch: " + env.CORE_BRANCH
-                  def std_v1_module_branch = get_std_v1_module_branch(env.CORE_BRANCH)
-                  println "std_v1_module_branch: " + std_v1_module_branch
-                  checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: std_v1_module_branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
-
-              }
-
-              sh '''
-                # uninstall v2 so it doesn't take precedence over v1 automatically
-                $INMANTA_TEST_ENV/bin/python3 -m pip uninstall inmanta-module-std -y
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
-              '''
-            }
-          }
-
           stage("test module v2") {
-            when {
-              environment name: "MODULES_V2", value: "true"
-            }
             steps {
               dir("std") {
                 deleteDir()
