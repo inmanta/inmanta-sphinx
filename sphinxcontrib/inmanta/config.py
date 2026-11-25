@@ -64,7 +64,8 @@ def _format_group(group_name, opt_list):
         typ = opt.get_type()
         if typ:
             yield _indent(":Type: %s" % typ)
-        default = opt.get_default_desc()
+        # an empty string default would render as an empty literal: four backticks, which is invalid RST
+        default = "``''``" if opt.default == "" else opt.get_default_desc()
         if default:
             default = str(default).strip()
             yield _indent(":Default: %s" % default)
