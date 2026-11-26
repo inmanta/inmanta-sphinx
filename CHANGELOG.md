@@ -1,3 +1,8 @@
+# v 2.4.0 (2026-11-26)
+Changes in this release:
+- Render an empty string default of a config option as '' instead of invalid RST.
+- Format code using black 25.1.0
+
 # v 2.3.0 (2024-12-19)
 Changes in this release:
 - Improve the overview of all handlers in the documentation. All entities sharing the same handler class are grouped together.

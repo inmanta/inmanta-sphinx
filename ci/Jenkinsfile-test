@@ -1,3 +1,21 @@
+def get_requirements_file_url(core_branch) {
+    // Retrieve the requirements file for the given core branch
+    def iso_version
+    def dev_version = ""
+    if (core_branch ==~ /master/) {
+        iso_version = "latest"
+        dev_version = "-dev"
+    }
+    else {
+        // do not store Matcher object in variable!
+        // see https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/#avoiding-notserializableexception
+        iso_version = (core_branch =~ /^iso(\d+)$/)[0][1]
+    }
+    return "https://docs.inmanta.com/inmanta-service-orchestrator${dev_version}/${iso_version}/reference/requirements.txt"
+
+}
+
+
 pipeline {
   agent any
   options {
@@ -30,11 +48,7 @@ pipeline {
         axes {
           axis {
             name "CORE_BRANCH"
-            values "master", "iso7"
-          }
-          axis {
-            name "MODULES_V2"
-            values "true", "false"
+            values "master", "iso9", "iso8"
           }
         }
         options {
@@ -72,50 +86,39 @@ pipeline {
                 '''
               }
               sh '''
-                export PYTHON_BINARY=$(irt -v DEBUG get-python-version-for-checkout --map-file ${WORKSPACE}/branch-to-python-version.json --path ${WORKSPACE}/inmanta-core)
+                export PYTHON_BINARY=$(IRT_SKIP_BRANCH_CHECK=true irt -v DEBUG get-python-version-for-checkout --map-file ${WORKSPACE}/branch-to-python-version.json --path ${WORKSPACE}/inmanta-core)
                 echo "Tests will be run with ${PYTHON_BINARY}"
                 rm -rf $INMANTA_TEST_ENV
                 ${PYTHON_BINARY} -m venv $INMANTA_TEST_ENV
                 $INMANTA_TEST_ENV/bin/python3 -m pip install --upgrade pip setuptools
-                $INMANTA_TEST_ENV/bin/python3 -m pip install -r ./inmanta-core/requirements.txt -r ./inmanta-core/requirements.dev.txt
-                $INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core ./inmanta-sphinx
+                $INMANTA_TEST_ENV/bin/python3 -m pip install ./inmanta-core[dev] ./inmanta-sphinx
                 rm -rf inmanta-core/docs/reference/modules
                 mkdir inmanta-core/docs/reference/modules
               '''
             }
           }
 
-          stage("test module v1") {
-            when {
-              environment name: "MODULES_V2", value: "false"
-            }
-            steps {
-              dir("std") {
-                deleteDir()
-              }
-              checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'std']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'inmantaci', url: 'https://github.com/inmanta/std.git']]]
-
-              sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
-              '''
-            }
-          }
-
           stage("test module v2") {
-            when {
-              environment name: "MODULES_V2", value: "true"
-            }
             steps {
               dir("std") {
                 deleteDir()
               }
-              sh '$INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre'
+              script{
+                println "Core branch: " + env.CORE_BRANCH
+                env.REQUIREMENTS_FILE = get_requirements_file_url(env.CORE_BRANCH)
+                println "REQUIREMENTS_FILE: " + env.REQUIREMENTS_FILE
 
-              sh '''
-                $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir inmanta-core/docs/reference/modules/
-                $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html inmanta-core/docs build
-              '''
+                def sh_script = '''
+                    # Use the constraints on the (V2) std module from the requirements file for this iso version.
+
+                    $INMANTA_TEST_ENV/bin/python3 -m pip install inmanta-module-std --pre -c ${REQUIREMENTS_FILE}
+                    $INMANTA_TEST_ENV/bin/python3 -m sphinxcontrib.inmanta.api --module-sources $(pwd) --module-name std  --out-dir ${WORKSPACE}/inmanta-core/docs/reference/modules/
+                    $INMANTA_TEST_ENV/bin/python3 -m sphinx.cmd.build -vv -T -b html ${WORKSPACE}/inmanta-core/docs build
+                '''
+                sh(returnStdout: false, script: sh_script)
+              }
+
+
             }
           }
         }
