@@ -1,3 +1,6 @@
+# v 2.5.0 (?)
+Changes in this release:
+
 # v 2.4.0 (2026-11-26)
 Changes in this release:
 - Render an empty string default of a config option as '' instead of invalid RST.
